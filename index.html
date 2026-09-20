@@ -41,7 +41,10 @@
 
 <header class="topbar">
   <a class="wordmark" href="./" aria-label="Гормональная карта">
-    <span class="wordmark-dot" aria-hidden="true"></span>Гормональная карта
+    <svg class="wordmark-mark" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="1.1" y="1.1" width="17.8" height="17.8" rx="5.6" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M10 5.6v8.8M5.6 10h8.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>Гормональная карта
   </a>
   <button class="profile-pill" id="profileBtn" aria-label="Изменить пол и возраст">
     <span id="profileText">—</span>
@@ -49,10 +52,10 @@
   </button>
 </header>
 
-<nav class="picker" aria-label="Выбор ситуации">
+<nav class="picker" aria-label="Категории">
   <div class="cats" id="cats" role="tablist" aria-label="Категории"></div>
-  <div class="chips" id="chips" role="tablist" aria-label="Ситуации"></div>
 </nav>
+<div class="chips" id="chips" role="tablist" aria-label="Ситуации"></div>
 
 <main>
   <section class="hero">
@@ -90,8 +93,9 @@
 
   <section class="hfilter">
     <div class="seg" role="tablist" aria-label="Что показывать">
-      <button class="seg-btn" id="segAll" role="tab" aria-selected="true">Все гормоны</button>
+      <button class="seg-btn" id="segActive" role="tab" aria-selected="true">Задействованные <span class="seg-count" id="cntActive">0</span></button>
       <button class="seg-btn" id="segFav" role="tab" aria-selected="false">Избранные <span class="seg-count" id="favCount">0</span></button>
+      <button class="seg-btn" id="segAll" role="tab" aria-selected="false">Все <span class="seg-count" id="cntAll">21</span></button>
     </div>
     <button class="seg-edit" id="favEdit">Настроить</button>
   </section>

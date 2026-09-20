@@ -17,7 +17,7 @@ const state = {
   sex: null, age: null, cat: 'bond', sit: 'sex',
   t: 0, scenario: null, factors: null,
   active: null, pinned: null, playing: false, raf: 0,
-  fav: new Set(), favOnly: false, hideTimer: 0,
+  fav: new Set(), view: 'active', hideTimer: 0,
 };
 
 /* ─── избранное ─────────────────────────────────────────── */
@@ -39,10 +39,12 @@ function toggleFav(id) {
 }
 function syncFavUI() {
   $('favCount').textContent = state.fav.size;
-  const empty = state.fav.size === 0;
-  if (empty && state.favOnly) state.favOnly = false;
-  $('segAll').setAttribute('aria-selected', !state.favOnly);
-  $('segFav').setAttribute('aria-selected', state.favOnly);
+  $('cntActive').textContent = state.scenario ? state.scenario.effects.length : 0;
+  $('cntAll').textContent = HORMONES.length;
+  if (state.view === 'fav' && state.fav.size === 0) state.view = 'active';
+  $('segActive').setAttribute('aria-selected', state.view === 'active');
+  $('segFav').setAttribute('aria-selected', state.view === 'fav');
+  $('segAll').setAttribute('aria-selected', state.view === 'all');
   const btn = $('detailFav');
   if (btn) {
     const on = state.fav.has(btn.dataset.h);
@@ -153,11 +155,10 @@ function renderChips() {
     }
     const b = document.createElement('button');
     b.className = 'chip'; b.type = 'button'; b.role = 'tab';
-    b.textContent = s.name;
+    b.textContent = s.short || s.name;   // под подзаголовком подраздела длинное имя избыточно
     b.setAttribute('aria-selected', s.id === state.sit);
     b.onclick = () => selectSituation(s.id);
     host.appendChild(b);
-    if (s.id === state.sit) requestAnimationFrame(() => b.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }));
   });
 }
 
@@ -239,12 +240,19 @@ function renderRecovery(sit) {
 
 /* ─── список гормонов ───────────────────────────────────── */
 
+/* Три режима списка: только затронутые этим сценарием, избранные, все. */
+function visible(id) {
+  if (state.view === 'fav') return state.fav.has(id);
+  if (state.view === 'active') return !!state.scenario.byId[id];
+  return true;
+}
+
 function renderHormones() {
   const sc = state.scenario;
   const host = $('hormones'); host.innerHTML = '';
   syncFavUI();
 
-  if (state.favOnly && state.fav.size === 0) {
+  if (state.view === 'fav' && state.fav.size === 0) {
     host.innerHTML = `<div class="hempty"><p>Пока ничего не отмечено. Выберите гормоны, за которыми следите, — и этот список будет короче.</p>
       <button type="button" id="hemptyBtn">Настроить избранные</button></div>`;
     $('hemptyBtn').onclick = openFavModal;
@@ -252,7 +260,7 @@ function renderHormones() {
   }
 
   GROUPS.forEach(g => {
-    const list = HORMONES.filter(h => h.group === g.id && (!state.favOnly || state.fav.has(h.id)))
+    const list = HORMONES.filter(h => h.group === g.id && visible(h.id))
       .sort((a, b) => (sc.byId[b.id] ? amplitude(sc.byId[b.id]) : -1) - (sc.byId[a.id] ? amplitude(sc.byId[a.id]) : -1));
     if (!list.length) return;
     const wrap = document.createElement('div');
@@ -593,10 +601,11 @@ function bind() {
 
   $('resetBtn').onclick = () => { stopPlay(); closeDetail(); updateTime(peakMoment(state.scenario)); };
 
-  $('segAll').onclick = () => { state.favOnly = false; renderHormones(); };
+  $('segActive').onclick = () => { state.view = 'active'; renderHormones(); };
+  $('segAll').onclick = () => { state.view = 'all'; renderHormones(); };
   $('segFav').onclick = () => {
     if (state.fav.size === 0) { openFavModal(); return; }
-    state.favOnly = true; renderHormones();
+    state.view = 'fav'; renderHormones();
   };
   $('favEdit').onclick = openFavModal;
   $('favClose').onclick = closeFavModal;
