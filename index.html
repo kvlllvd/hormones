@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=25">
-<link rel="icon" href="favicon.svg?v=25" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css?v=28">
+<link rel="icon" href="favicon.svg?v=28" type="image/svg+xml">
 </head>
 <body>
 
@@ -81,7 +81,7 @@
     <h1 id="sitName"></h1>
     <div class="blurb-wrap" id="blurbWrap">
       <p class="blurb" id="sitBlurb"></p>
-      <button class="blurb-more" id="blurbMore" type="button" aria-expanded="false" hidden>More</button>
+      <button class="blurb-more" id="blurbMore" type="button" aria-expanded="false" hidden>Ещё</button>
     </div>
   </section>
 
@@ -90,14 +90,11 @@
   <div class="timing" id="timing">
     <h3 class="timing-title">Лучшее время</h3>
     <p class="timing-text" id="timingText"></p>
-    <button class="timing-more" id="timingMore" type="button" aria-expanded="false">More</button>
+    <button class="timing-more" id="timingMore" type="button" aria-expanded="false">Ещё</button>
   </div>
 
   <section class="timeline" aria-label="Динамика во времени">
     <div class="time-head">
-      <button class="play" id="playBtn" aria-label="Проиграть сценарий">
-        <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path id="playIcon" d="M4.5 3.2v9.6l8-4.8z" fill="currentColor"/></svg>
-      </button>
       <div class="time-readout">
         <span class="time-value" id="timeValue">0</span>
         <span class="time-caption" id="timeCaption">от начала события</span>
@@ -110,7 +107,6 @@
         <span>Сбросить</span>
       </button>
       <div class="dose" id="dose" hidden></div>
-      <div class="time-load" id="timeLoad"></div>
     </div>
 
     <div class="sex-legend" id="sexLegend" hidden>
@@ -148,7 +144,7 @@
 
 <footer class="foot">
   <p class="foot-warn" id="footWarn">
-    <span class="foot-warn-lead">Это справочная модель, а не диагностика.</span><span class="foot-warn-rest"> Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы. Направление и механизм каждой реакции сверены с Endotext (NCBI Bookshelf), раздел «Вещества» — дополнительно с NIDA (National Institute on Drug Abuse); кратности, которых эти источники не приводят, взяты из отдельных работ в PubMed. Там, где источники расходятся, в подписи к гормону сказано, чем разовый приём отличается от регулярного.</span><button class="foot-more" id="footMore" type="button" aria-expanded="false">More</button>
+    <span class="foot-warn-lead">Это справочная модель, а не диагностика.</span><span class="foot-warn-rest"> Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы. Направление и механизм каждой реакции сверены с Endotext (NCBI Bookshelf), раздел «Вещества» — дополнительно с NIDA (National Institute on Drug Abuse); кратности, которых эти источники не приводят, взяты из отдельных работ в PubMed. Там, где источники расходятся, в подписи к гормону сказано, чем разовый приём отличается от регулярного.</span><button class="foot-more" id="footMore" type="button" aria-expanded="false">Ещё</button>
   </p>
   <div class="foot-row" id="footRow">
     <p class="foot-meta">21 гормон · 47 сценариев · источники: <a href="https://www.ncbi.nlm.nih.gov/books/NBK278943/">Endotext</a>, <a href="https://nida.nih.gov/">NIDA</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/">PubMed</a> · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
@@ -169,6 +165,6 @@
 </div>
 <div class="scrim" id="scrim" hidden></div>
 
-<script type="module" src="js/app.js?v=25"></script>
+<script type="module" src="js/app.js?v=28"></script>
 </body>
 </html>

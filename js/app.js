@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=25';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=25';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=25';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=28';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=28';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=28';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=25';
+} from './engine.js?v=28';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -19,7 +19,7 @@ let neverConfigured = true;
 const state = {
   sex: null, age: null, cat: 'bond', sit: 'love',
   t: 0, horizon: 1, sc: null, scByS: {}, sexes: [], sexesOn: new Set(),
-  active: null, pinned: null, detailId: null, playing: false, raf: 0,
+  active: null, pinned: null, detailId: null,
   view: 'active', hideTimer: 0, tipPinned: false, navOpen: false,
 };
 
@@ -149,7 +149,7 @@ function syncTiming() { collapse($('timingText'), $('timingMore'), $('timing'));
 function collapse(text, btn, host) {
   host.classList.remove('is-open');
   btn.setAttribute('aria-expanded', 'false');
-  btn.textContent = 'More';
+  btn.textContent = 'Ещё';
   btn.hidden = text.scrollHeight <= text.clientHeight + 1;
 }
 
@@ -214,7 +214,6 @@ function renderChips() {
 }
 
 function selectSituation(id, keepNav) {
-  stopPlay();
   state.sit = id;
   state.cat = SITUATION_BY_ID[id].cat;
   state.pinned = null; state.active = null;
@@ -609,39 +608,9 @@ function updateTime(t) {
   $('timeCaption').textContent = state.t < 1 ? 'момент события' : 'после начала';
   $('scrub').value = Math.round(toLog(state.t, state.horizon) * 1000);
 
-  let now = 0, max = 0;
-  state.sc.effects.forEach(e => {
-    now += Math.abs(Math.log2(levelAt(e, state.t)));
-    max += Math.max(Math.abs(Math.log2(e.peak)), e.hasReb ? Math.abs(Math.log2(e.reb)) : 0);
-  });
-  const load = max ? Math.round(now / max * 100) : 0;
-  $('timeLoad').textContent = load <= 3 ? 'система в норме' : `отклонение ${load}%`;
-
   paintLevels();
   drawChart();
   if (state.tipPinned) renderTip(playheadX());
-}
-
-function startPlay() {
-  state.playing = true;
-  $('playIcon').setAttribute('d', 'M4 3h3v10H4zM9 3h3v10H9z');
-  const H = state.horizon;
-  const dur = 9000;
-  const from = state.t >= H * 0.98 ? 0 : toLog(state.t, H);
-  const t0 = performance.now();
-  const tick = (now) => {
-    if (!state.playing) return;
-    const u = from + (now - t0) / dur * (1 - from);
-    if (u >= 1) { updateTime(H); stopPlay(); return; }
-    updateTime(invLog(u, H));
-    state.raf = requestAnimationFrame(tick);
-  };
-  state.raf = requestAnimationFrame(tick);
-}
-function stopPlay() {
-  state.playing = false;
-  cancelAnimationFrame(state.raf);
-  $('playIcon').setAttribute('d', 'M4.5 3.2v9.6l8-4.8z');
 }
 
 /* ─── подсказка на графике ──────────────────────────────── */
@@ -651,7 +620,6 @@ function chartPointer(ev) {
   const r = host.getBoundingClientRect();
   const pw = r.width - PAD.l - PAD.r;
   const u = Math.max(0, Math.min(1, (ev.clientX - r.left - PAD.l) / pw));
-  stopPlay();
   updateTime(invLog(u, state.horizon));
   state.tipPinned = true;                 // подсказка закрывается только крестиком
   renderTip(playheadX());
@@ -827,14 +795,13 @@ function bind() {
   wm.onclick = (e) => { e.preventDefault(); wm.classList.add('is-reverted'); toTop(); };
   wm.onmouseleave = () => wm.classList.remove('is-reverted');
 
-  $('playBtn').onclick = () => (state.playing ? stopPlay() : startPlay());
-  $('scrub').oninput = (e) => { stopPlay(); updateTime(invLog(e.target.value / 1000, state.horizon)); };
+  $('scrub').oninput = (e) => updateTime(invLog(e.target.value / 1000, state.horizon));
   $('detailClose').onclick = closeDetail;
   $('detailPin').onclick = togglePin;
   $('scrim').onclick = closeDetail;
   $('tipClose').onclick = (e) => { e.stopPropagation(); hideTip(); };
 
-  $('resetBtn').onclick = () => { stopPlay(); closeDetail(); updateTime(peakMoment(state.sc)); };
+  $('resetBtn').onclick = () => { closeDetail(); updateTime(peakMoment(state.sc)); };
 
   $('segActive').onclick = () => { state.view = 'active'; renderHormones(); };
   $('segAll').onclick = () => { state.view = 'all'; renderHormones(); };
@@ -848,21 +815,21 @@ function bind() {
   bmore.onclick = () => {
     const open = $('blurbWrap').classList.toggle('is-open');
     bmore.setAttribute('aria-expanded', open);
-    bmore.textContent = open ? 'Less' : 'More';
+    bmore.textContent = open ? 'Скрыть' : 'Ещё';
   };
 
   const tmore = $('timingMore');
   tmore.onclick = () => {
     const open = $('timing').classList.toggle('is-open');
     tmore.setAttribute('aria-expanded', open);
-    tmore.textContent = open ? 'Less' : 'More';
+    tmore.textContent = open ? 'Скрыть' : 'Ещё';
   };
 
   const more = $('footMore');
   more.onclick = () => {
     const open = $('footWarn').classList.toggle('is-open');
     more.setAttribute('aria-expanded', open);
-    more.textContent = open ? 'Less' : 'More';
+    more.textContent = open ? 'Скрыть' : 'Ещё';
   };
 
   const det = $('detail');
