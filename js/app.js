@@ -89,16 +89,6 @@ function applyProfile() {
   $('navProfileText').textContent = label;
 }
 
-/* «Лучшее время» на телефоне поднимается плашкой под показатели, свёрнутое
-   до двух строк; на широком экране остаётся в карточке возврата к норме. */
-function placeTiming() {
-  const el = $('timing');
-  const mob = isSheet();
-  if (mob) { if (el.previousElementSibling !== $('stats')) $('stats').after(el); }
-  else if (el.parentElement !== $('recovery')) $('recovery').appendChild(el);
-  $('timingTitle').textContent = mob ? 'Лучшее время' : 'Лучшее время для гормонального фона';
-}
-
 /* Пол и возраст трогают редко: на широком экране кнопка стоит в подвале
    рядом со служебной строкой, на узком — в самом низу меню. */
 function placeProfile() {
@@ -861,7 +851,7 @@ function bind() {
     clearTimeout(rt);
     rt = setTimeout(() => {
       if (!isSheet() && state.navOpen) closeNav();
-      placeProfile(); placeTiming();
+      placeProfile();
       syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
@@ -885,7 +875,7 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1]
 }
 
 bind();
-placeProfile(); placeTiming();
+placeProfile();
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
