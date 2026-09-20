@@ -10,7 +10,7 @@ export const SEXES = [
 
 export const AGES = [
   { id: 'a18', title: '18–25', short: '18–25' },
-  { id: 'a26', title: '26–34', short: '26–34' },
+  { id: 'a26', title: '26–35', short: '26–35' },
   { id: 'a36', title: '36–45', short: '36–45' },
   { id: 'a46', title: '46–60', short: '46–60' },
   { id: 'a60', title: '60+',   short: '60+' },

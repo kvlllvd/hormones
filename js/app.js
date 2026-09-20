@@ -35,8 +35,8 @@ function loadProfile() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!saved) return false;
-    /* возрастная ступень «35 лет» убрана — старые профили переезжают в 36–45 */
-    const age = saved.age === 'a35' ? 'a36' : saved.age;
+    /* отдельная ступень «35 лет» убрана — она вошла в диапазон 26–35 */
+    const age = saved.age === 'a35' ? 'a26' : saved.age;
     if (SEXES.some(s => s.id === saved.sex) && AGES.some(a => a.id === age)) {
       state.sex = saved.sex; state.age = age; neverConfigured = false; return true;
     }
@@ -126,6 +126,17 @@ function hideMenuHint() {
   document.querySelectorAll('.chip.is-hint').forEach(c => c.classList.remove('is-hint'));
   try { localStorage.setItem(MENU_SEEN, '1'); } catch {}
 }
+
+/* Чип раздела в шапке нужен только тогда, когда сам заголовок уже уехал
+   под неё: пока заголовок виден, чип дублировал бы его. */
+let chipRaf = 0;
+function syncChip() {
+  chipRaf = 0;
+  const h1 = $('sitName');
+  const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h')) || 56;
+  document.querySelector('.topbar').classList.toggle('is-scrolled', h1.getBoundingClientRect().bottom <= top);
+}
+function queueChip() { if (!chipRaf) chipRaf = requestAnimationFrame(syncChip); }
 
 /* ─── блокировка прокрутки под шитом ────────────────────── */
 
@@ -242,7 +253,7 @@ function renderAll() {
   state.t = peakMoment(state.sc);
 
   renderCats(); renderChips(); renderLegend();
-  $('sitTag').textContent = `${CATEGORIES.find(c => c.id === sit.cat).title} · ${sit.tag}`;
+  $('sitTag').textContent = CATEGORIES.find(c => c.id === sit.cat).title;
   $('sitName').textContent = sit.name;
   $('sitBlurb').textContent = sit.blurb;
   $('sectChipText').textContent = sit.short || sit.name;
@@ -252,6 +263,7 @@ function renderAll() {
   renderRecovery(sit);
   drawChart();
   updateTime(state.t);
+  syncChip();
 
   document.querySelector('main').classList.remove('fade-in');
   void document.querySelector('main').offsetWidth;
@@ -757,7 +769,7 @@ function bind() {
   $('navScrim').onclick = closeNav;
   $('navHintOk').onclick = hideMenuHint;
   $('sectChip').onclick = () => {
-    closeNav();
+    if (isSheet()) { state.navOpen ? closeNav() : openNav(); return; }
     scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' });
   };
 
@@ -814,6 +826,8 @@ function bind() {
   wrap.addEventListener('pointercancel', () => { dragging = false; });
   wrap.addEventListener('mouseleave', () => { if (!state.tipPinned) hideTip(); });
 
+  addEventListener('scroll', queueChip, { passive: true });
+
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { closeDetail(); closeOnboarding(); closeNav(); hideTip(); }
   });
@@ -823,6 +837,7 @@ function bind() {
     clearTimeout(rt);
     rt = setTimeout(() => {
       if (!isSheet() && state.navOpen) closeNav();
+      syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
     }, 120);
@@ -854,5 +869,7 @@ if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
   renderAll();
-  openOnboarding();
+  /* на телефоне онбординга нет — работаем на значениях по умолчанию,
+     пол и возраст меняются из меню, когда это понадобится */
+  if (isSheet()) neverConfigured = false; else openOnboarding();
 }

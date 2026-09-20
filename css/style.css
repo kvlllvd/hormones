@@ -405,27 +405,38 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
 @media (max-width:720px){
   :root{--pad:16px; --topbar-h:56px}
   .burger{display:inline-flex}
-  .sect-chip{max-width:none; flex:1 1 auto; justify-content:flex-start; min-width:0}
   .topbar{gap:8px}
+  /* чип появляется, только когда заголовок сценария уехал под шапку */
+  .sect-chip{
+    max-width:none; flex:1 1 auto; justify-content:flex-start; min-width:0;
+    opacity:0; pointer-events:none; transform:translateY(-4px);
+    transition:opacity .2s var(--ease), transform .2s var(--ease);
+  }
+  .topbar.is-scrolled .sect-chip{opacity:1; pointer-events:auto; transform:none}
 
   /* Вся навигация уезжает в панель под бургером. */
   .picker{
     position:fixed; top:0; right:0; bottom:0; z-index:44; width:min(370px,88vw); max-width:none;
-    display:block; margin:0; padding:14px var(--pad) calc(24px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; align-items:stretch; margin:0;
+    padding:14px var(--pad) calc(24px + env(safe-area-inset-bottom));
     background:var(--surface); overflow-y:auto; overscroll-behavior:contain;
     box-shadow:-12px 0 40px -18px rgba(16,16,20,.5);
     transform:translateX(102%); transition:transform .28s var(--ease); visibility:hidden;
   }
   .picker.is-open{transform:none; visibility:visible}
+  .nav-top{order:0; flex:none} .cats{order:1; flex:none} .chips{order:2; flex:none} .nav-hint{order:3}
+  .nav-profile{order:4}
   .nav-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
   .nav-title{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
   .nav-close{
     width:34px; height:34px; border-radius:50%; background:var(--surface-2);
     color:var(--ink-2); font-size:13px; display:grid; place-items:center;
   }
-  .nav-profile{display:flex; width:100%; justify-content:space-between; margin:0 0 16px; padding:11px 14px; border-radius:13px}
+  /* пол и возраст трогают редко — они уходят в самый низ панели */
+  .nav-profile{display:flex; width:100%; justify-content:space-between; margin:auto 0 0; padding:12px 14px; border-radius:13px; flex:none}
   .cats,.chips{display:flex; flex-wrap:wrap; padding:0}
   .cats{gap:5px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--line-soft)}
+  .chips{padding-bottom:6px}
   .cat{padding:6px 11px; font-size:13.5px}
   .chips{gap:6px}
   .chip{padding:8px 13px; font-size:14px}
