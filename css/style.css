@@ -164,8 +164,9 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   text-transform:uppercase; color:var(--ink-3); padding:0 2px 0 8px; white-space:nowrap;
 }
 .chips > .chip-sub:first-child{padding-left:0}
+/* На десктопе чипы подразделов мельче разделов; на телефоне размер свой — 13px. */
 .chip{
-  flex:none; padding:6px 12px; border-radius:100px; font-size:13px; background:var(--surface);
+  flex:none; padding:5px 11px; border-radius:100px; font-size:11px; background:var(--surface);
   color:var(--ink-2); border:1px solid var(--line); transition:.2s var(--ease);
   white-space:nowrap;
 }
