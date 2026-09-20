@@ -224,7 +224,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .nav-hint-ok{padding:6px 14px; border-radius:100px; background:#fff; color:var(--ink); font-size:12.5px; font-weight:500; flex:none; margin-left:auto}
 
 /* ─── герой ─────────────────────────────────────────────── */
-.hero{padding:22px 0 0; max-width:720px}
+.hero{padding:62px 0 0; max-width:720px}
 .eyebrow{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
 h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; margin:8px 0 14px}
 /* Размер вынесен в переменную: по ней же считается высота строки,
