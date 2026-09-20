@@ -1,82 +1,44 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=9';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES } from './situations.js?v=9';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=9';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=10';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE } from './situations.js?v=10';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=10';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=9';
+} from './engine.js?v=10';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
-const FAV_STORE = 'hormones.favourites.v1';
+const MENU_SEEN = 'hormones.menuseen.v1';
 const RESTORATIVE = new Set(['sleep', 'morninglight', 'meditation', 'hug']);
 const isTouch = matchMedia('(hover: none)').matches;
 const isSheet = () => matchMedia('(max-width: 720px)').matches;
+const SEX_LABEL = { m: 'М', f: 'Ж' };
+
+let neverConfigured = true;
 
 const state = {
   sex: null, age: null, cat: 'bond', sit: 'sex',
-  t: 0, scenario: null, factors: null,
+  t: 0, horizon: 1, sc: null, scByS: {}, sexes: [], sexesOn: new Set(),
   active: null, pinned: null, playing: false, raf: 0,
-  fav: new Set(), view: 'active', hideTimer: 0,
+  view: 'active', hideTimer: 0, tipPinned: false, navOpen: false,
 };
 
-/* ─── избранное ─────────────────────────────────────────── */
-
-function loadFav() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(FAV_STORE) || '[]');
-    state.fav = new Set(raw.filter(id => HORMONE_BY_ID[id]));
-  } catch { state.fav = new Set(); }
-}
-function saveFav() {
-  try { localStorage.setItem(FAV_STORE, JSON.stringify([...state.fav])); } catch {}
-}
-function toggleFav(id) {
-  if (state.fav.has(id)) state.fav.delete(id); else state.fav.add(id);
-  saveFav();
-  syncFavUI();
-  renderHormones();
-}
-function syncFavUI() {
-  $('favCount').textContent = state.fav.size;
-  $('cntAll').textContent = HORMONES.length;
-  if (state.view === 'fav' && state.fav.size === 0) state.view = 'active';
-  $('segActive').setAttribute('aria-selected', state.view === 'active');
-  $('segFav').setAttribute('aria-selected', state.view === 'fav');
-  $('segAll').setAttribute('aria-selected', state.view === 'all');
-  const btn = $('detailFav');
-  if (btn) {
-    const on = state.fav.has(btn.dataset.h);
-    btn.setAttribute('aria-pressed', on);
-    btn.querySelector('.detail-fav-text').textContent = on ? 'В избранном' : 'Добавить в избранное';
-  }
-}
-
-function renderFavModal() {
-  const host = $('favList'); host.innerHTML = '';
-  GROUPS.forEach(g => {
-    const title = document.createElement('p');
-    title.className = 'fav-group'; title.textContent = g.title;
-    host.appendChild(title);
-    HORMONES.filter(h => h.group === g.id).forEach(h => {
-      const b = document.createElement('button');
-      b.className = 'fav-item'; b.type = 'button';
-      b.setAttribute('aria-pressed', state.fav.has(h.id));
-      b.innerHTML = `<span class="fav-box"><svg width="11" height="9" viewBox="0 0 11 9" aria-hidden="true"><path d="M1 4.6L4 7.5 10 1.3" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span>${h.name}<em>${h.role.toLowerCase()}</em></span>`;
-      b.onclick = () => { toggleFav(h.id); b.setAttribute('aria-pressed', state.fav.has(h.id)); };
-      host.appendChild(b);
-    });
-  });
-}
-
 /* ─── профиль ───────────────────────────────────────────── */
+
+const FACTORS = {};
+function factorsFor(sexId) {
+  const key = sexId + state.age;
+  return (FACTORS[key] || (FACTORS[key] = profileFactors(sexId, state.age)));
+}
 
 function loadProfile() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
-    if (saved && SEXES.some(s => s.id === saved.sex) && AGES.some(a => a.id === saved.age)) {
-      state.sex = saved.sex; state.age = saved.age; return true;
+    if (!saved) return false;
+    /* возрастная ступень «35 лет» убрана — старые профили переезжают в 36–45 */
+    const age = saved.age === 'a35' ? 'a36' : saved.age;
+    if (SEXES.some(s => s.id === saved.sex) && AGES.some(a => a.id === age)) {
+      state.sex = saved.sex; state.age = age; neverConfigured = false; return true;
     }
   } catch { /* приватный режим — просто спросим заново */ }
   return false;
@@ -106,22 +68,80 @@ function buildOnboarding() {
   mk($('obAge'), AGES, 'age');
   $('obSubmit').disabled = !(draft.sex && draft.age);
   $('obSubmit').onclick = () => {
+    const first = neverConfigured;
+    neverConfigured = false;
     state.sex = draft.sex; state.age = draft.age;
-    saveProfile(); closeOnboarding(); applyProfile(); renderAll();
+    saveProfile(); closeOnboarding(); applyProfile();
+    state.sexesOn = new Set([state.sex]);
+    renderAll();
+    if (first) showMenuOnboarding();
   };
-  $('obClose').hidden = !(state.sex && state.age);
+  $('obClose').hidden = neverConfigured;
   $('obClose').onclick = closeOnboarding;
 }
-function openOnboarding() { buildOnboarding(); $('onboarding').hidden = false; }
-function openFavModal() { closeDetail(); renderFavModal(); $('favModal').hidden = false; }
-function closeFavModal() { $('favModal').hidden = true; }
+function openOnboarding() { closeNav(); buildOnboarding(); $('onboarding').hidden = false; }
 function closeOnboarding() { $('onboarding').hidden = true; }
 
 function applyProfile() {
-  state.factors = profileFactors(state.sex, state.age);
   const sex = SEXES.find(s => s.id === state.sex);
   const age = AGES.find(a => a.id === state.age);
-  $('profileText').textContent = `${sex.short} · ${age.short}`;
+  const label = `${sex.short} · ${age.short}`;
+  $('navProfileText').textContent = label;
+}
+
+/* ─── меню разделов ─────────────────────────────────────── */
+
+/* На узком экране навигация живёт в выезжающей панели под бургером,
+   на широком — обычным блоком в потоке страницы. */
+function openNav() {
+  if (!isSheet()) return;
+  state.navOpen = true;
+  $('picker').classList.add('is-open');
+  $('navScrim').hidden = false;
+  $('burgerBtn').setAttribute('aria-expanded', 'true');
+  lockScroll();
+}
+function closeNav() {
+  if (!state.navOpen) return;
+  state.navOpen = false;
+  $('picker').classList.remove('is-open');
+  $('navScrim').hidden = true;
+  $('burgerBtn').setAttribute('aria-expanded', 'false');
+  hideMenuHint();
+  unlockScroll();
+}
+
+/* Первый вход: показываем всю навигацию целиком и подсвечиваем один сценарий. */
+function showMenuOnboarding() {
+  try { if (localStorage.getItem(MENU_SEEN)) return; } catch {}
+  if (isSheet()) openNav();
+  $('navHint').hidden = false;
+  $('picker').classList.add('is-hinting');
+  const chip = $('chips').querySelector('.chip[aria-selected="true"]') || $('chips').querySelector('.chip');
+  if (chip) { chip.classList.add('is-hint'); chip.scrollIntoView({ block: 'nearest' }); }
+}
+function hideMenuHint() {
+  $('navHint').hidden = true;
+  $('picker').classList.remove('is-hinting');
+  document.querySelectorAll('.chip.is-hint').forEach(c => c.classList.remove('is-hint'));
+  try { localStorage.setItem(MENU_SEEN, '1'); } catch {}
+}
+
+/* ─── блокировка прокрутки под шитом ────────────────────── */
+
+let lockY = 0, lockCount = 0;
+function lockScroll() {
+  if (lockCount++ ) return;
+  lockY = window.scrollY;
+  document.body.style.top = -lockY + 'px';
+  document.body.classList.add('is-locked');
+}
+function unlockScroll(force) {
+  if (force) lockCount = 0; else if (lockCount && --lockCount) return;
+  if (!document.body.classList.contains('is-locked')) return;
+  document.body.classList.remove('is-locked');
+  document.body.style.top = '';
+  window.scrollTo(0, lockY);
 }
 
 /* ─── выбор ситуации ────────────────────────────────────── */
@@ -136,7 +156,7 @@ function renderCats() {
     b.onclick = () => {
       state.cat = c.id;
       const first = SITUATIONS.find(s => s.cat === c.id);
-      selectSituation(first.id);
+      selectSituation(first.id, true);
     };
     host.appendChild(b);
   });
@@ -161,27 +181,71 @@ function renderChips() {
   });
 }
 
-function selectSituation(id) {
+function selectSituation(id, keepNav) {
   stopPlay();
   state.sit = id;
   state.cat = SITUATION_BY_ID[id].cat;
   state.pinned = null; state.active = null;
-  hideDetail();
+  state.sexesOn = new Set([state.sex]);
+  hideMenuHint();
+  hideDetail(); hideTip();
   history.replaceState(null, '', '#' + id);
   renderAll();
+  if (!keepNav) closeNav();
+}
+
+/* ─── сценарии для одного или двух полов ────────────────── */
+
+function comparable() { return COMPARE.has(state.sit); }
+
+function activeSexes() {
+  if (!comparable()) return [state.sex];
+  const on = SEXES.map(s => s.id).filter(id => state.sexesOn.has(id));
+  return on.length ? on : [state.sex];
+}
+
+function buildScenarios() {
+  const sit = SITUATION_BY_ID[state.sit];
+  state.sexes = activeSexes();
+  state.scByS = {};
+  state.sexes.forEach(id => { state.scByS[id] = buildScenario(sit, id, factorsFor(id)); });
+  state.sc = state.scByS[state.sex] || state.scByS[state.sexes[0]];
+  state.horizon = Math.max(...state.sexes.map(s => state.scByS[s].horizon));
+}
+
+function renderLegend() {
+  const host = $('sexLegend');
+  host.hidden = !comparable();
+  if (host.hidden) return;
+  host.querySelectorAll('.sexbtn').forEach(b => {
+    b.setAttribute('aria-pressed', state.sexes.includes(b.dataset.sex));
+  });
+}
+
+function toggleSex(id) {
+  if (state.sexesOn.has(id)) {
+    if (state.sexesOn.size < 2) return;    // последний включённый пол выключить нельзя
+    state.sexesOn.delete(id);
+  } else state.sexesOn.add(id);
+  const t = state.t;
+  buildScenarios();
+  renderLegend();
+  renderHormones();
+  updateTime(Math.min(t, state.horizon));
 }
 
 /* ─── общий рендер ──────────────────────────────────────── */
 
 function renderAll() {
   const sit = SITUATION_BY_ID[state.sit];
-  state.scenario = buildScenario(sit, state.sex, state.factors);
-  state.t = peakMoment(state.scenario);
+  buildScenarios();
+  state.t = peakMoment(state.sc);
 
-  renderCats(); renderChips();
+  renderCats(); renderChips(); renderLegend();
   $('sitTag').textContent = `${CATEGORIES.find(c => c.id === sit.cat).title} · ${sit.tag}`;
   $('sitName').textContent = sit.name;
   $('sitBlurb').textContent = sit.blurb;
+  $('sectChipText').textContent = sit.short || sit.name;
 
   renderStats(sit);
   renderHormones();
@@ -195,7 +259,7 @@ function renderAll() {
 }
 
 function renderStats(sit) {
-  const sc = state.scenario;
+  const sc = state.sc;
   const restorative = RESTORATIVE.has(sit.id);
   const moved = sc.effects.length;
   const slowest = HORMONE_BY_ID[sc.slowest.id].name;
@@ -225,7 +289,8 @@ function renderStats(sit) {
 
 function renderRecovery(sit) {
   $('recoveryText').textContent = sit.recovery;
-  const rows = [...state.scenario.effects].sort((a, b) => b.tEnd - a.tEnd).slice(0, 6);
+  $('timingText').textContent = TIMING[sit.id] || '';
+  const rows = [...state.sc.effects].sort((a, b) => b.tEnd - a.tEnd).slice(0, 6);
   $('recoveryList').innerHTML = rows.map(e => {
     const h = HORMONE_BY_ID[e.id];
     const ex = extreme(e);
@@ -239,28 +304,27 @@ function renderRecovery(sit) {
 
 /* ─── список гормонов ───────────────────────────────────── */
 
-/* Три режима списка: только затронутые этим сценарием, избранные, все. */
+function effFor(sexId, id) { const sc = state.scByS[sexId]; return sc && sc.byId[id]; }
+function movedAnywhere(id) { return state.sexes.some(s => !!effFor(s, id)); }
+
 function visible(id) {
-  if (state.view === 'fav') return state.fav.has(id);
-  if (state.view === 'active') return !!state.scenario.byId[id];
+  if (state.view === 'active') return movedAnywhere(id);
   return true;
 }
 
 function renderHormones() {
-  const sc = state.scenario;
   const host = $('hormones'); host.innerHTML = '';
-  syncFavUI();
+  $('cntAll').textContent = HORMONES.length;
+  $('segActive').setAttribute('aria-selected', state.view === 'active');
+  $('segAll').setAttribute('aria-selected', state.view === 'all');
 
-  if (state.view === 'fav' && state.fav.size === 0) {
-    host.innerHTML = `<div class="hempty"><p>Пока ничего не отмечено. Выберите гормоны, за которыми следите, — и этот список будет короче.</p>
-      <button type="button" id="hemptyBtn">Настроить избранные</button></div>`;
-    $('hemptyBtn').onclick = openFavModal;
-    return;
-  }
+  const rank = (id) => Math.max(...state.sexes.map(s => {
+    const e = effFor(s, id); return e ? amplitude(e) : -1;
+  }));
 
   GROUPS.forEach(g => {
     const list = HORMONES.filter(h => h.group === g.id && visible(h.id))
-      .sort((a, b) => (sc.byId[b.id] ? amplitude(sc.byId[b.id]) : -1) - (sc.byId[a.id] ? amplitude(sc.byId[a.id]) : -1));
+      .sort((a, b) => rank(b.id) - rank(a.id));
     if (!list.length) return;
     const wrap = document.createElement('div');
     wrap.className = 'hgroup';
@@ -276,13 +340,20 @@ function renderHormones() {
   }
 }
 
+const BAR = `<span class="hbar"><span class="hbar-track"></span><span class="hbar-fill"></span><span class="hbar-mid"></span></span>`;
+
 function hormoneCard(h) {
+  const dual = state.sexes.length > 1;
   const b = document.createElement('button');
-  b.className = 'hcard'; b.type = 'button'; b.dataset.h = h.id;
-  b.innerHTML = `
-    <span class="hname">${h.name}${state.fav.has(h.id) ? '<span class="hstar">★</span>' : ''}<span class="hrole">${h.role}</span></span>
-    <span class="hbar"><span class="hbar-track"></span><span class="hbar-fill"></span><span class="hbar-mid"></span></span>
-    <span class="hval mono">норма</span>`;
+  b.className = 'hcard' + (dual ? ' hcard--dual' : ''); b.type = 'button'; b.dataset.h = h.id;
+  const scales = dual
+    ? `<span class="hduo">${state.sexes.map(s => `
+        <span class="hrow" data-s="${s}">
+          <i class="hsex hsex--${s}">${SEX_LABEL[s]}</i>${BAR}
+          <span class="hval mono">норма</span>
+        </span>`).join('')}</span>`
+    : `${BAR}<span class="hval mono">норма</span>`;
+  b.innerHTML = `<span class="hname">${h.name}<span class="hrole">${h.role}</span></span>${scales}`;
   if (!isTouch) {
     b.addEventListener('mouseenter', () => {
       if (state.pinned) return;
@@ -300,24 +371,38 @@ function hormoneCard(h) {
 }
 
 /* Полоса: отклонение в логарифмической шкале, центр — норма. */
+function paintBar(host, eff, sexId) {
+  const lvl = eff ? levelAt(eff, state.t) : 1;
+  const dev = Math.log2(lvl);
+  const frac = Math.min(1, Math.abs(dev) / 3);
+  const fill = host.querySelector('.hbar-fill');
+  const val = host.querySelector('.hval');
+  const flat = Math.abs(lvl - 1) < 0.03;
+  const width = flat ? 2 : Math.max(3, frac * 50);
+
+  fill.style.width = width + '%';
+  fill.style.left = flat ? 'calc(50% - 1px)' : (dev >= 0 ? '50%' : (50 - width) + '%');
+  fill.style.background = sexId
+    ? (eff && !flat ? `var(--sex-${sexId})` : 'var(--flat)')
+    : (flat ? 'var(--flat)' : (dev > 0 ? 'var(--up)' : 'var(--down)'));
+  val.textContent = eff ? formatDelta(lvl) : 'в норме';
+  val.className = 'hval mono ' + (sexId
+    ? (eff && !flat ? 'sex-' + sexId : 'flat')
+    : (flat || !eff ? 'flat' : dev > 0 ? 'up' : 'down'));
+}
+
 function paintLevels() {
-  const sc = state.scenario;
+  const dual = state.sexes.length > 1;
   document.querySelectorAll('.hcard').forEach(card => {
     const id = card.dataset.h;
-    const eff = sc.byId[id];
-    const lvl = eff ? levelAt(eff, state.t) : 1;
-    const dev = Math.log2(lvl);
-    const frac = Math.min(1, Math.abs(dev) / 3);
-    const fill = card.querySelector('.hbar-fill');
-    const val = card.querySelector('.hval');
-    const flat = Math.abs(lvl - 1) < 0.03;
-
-    fill.style.width = (flat ? 2 : Math.max(3, frac * 50)) + '%';
-    fill.style.left = flat ? 'calc(50% - 1px)' : (dev >= 0 ? '50%' : (50 - Math.max(3, frac * 50)) + '%');
-    fill.style.background = flat ? 'var(--flat)' : (dev > 0 ? 'var(--up)' : 'var(--down)');
-    val.textContent = eff ? formatDelta(lvl) : 'в норме';
-    val.className = 'hval mono ' + (flat || !eff ? 'flat' : dev > 0 ? 'up' : 'down');
-    card.classList.toggle('is-flat', !eff);
+    if (dual) {
+      card.querySelectorAll('.hrow').forEach(row => paintBar(row, effFor(row.dataset.s, id), row.dataset.s));
+      card.classList.toggle('is-flat', !movedAnywhere(id));
+    } else {
+      const eff = state.sc.byId[id];
+      paintBar(card, eff, null);
+      card.classList.toggle('is-flat', !eff);
+    }
   });
   if (state.active) updateDetailNow();
 }
@@ -331,26 +416,38 @@ function setActive(id) {
 /* ─── график ────────────────────────────────────────────── */
 
 const PAD = { l: 36, r: 10, t: 42, b: 18 };
+const SEX_COLOR = { m: '#3E8FD4', f: '#D9569B' };
+
+function chartGeom() {
+  const host = $('chart');
+  return { w: host.clientWidth || 600, h: host.clientHeight || 220 };
+}
+function playheadX() {
+  const { w } = chartGeom();
+  return PAD.l + toLog(state.t, state.horizon) * (w - PAD.l - PAD.r);
+}
 
 function drawChart() {
   const host = $('chart');
-  const w = host.clientWidth || 600;
-  const h = host.clientHeight || 220;
-  const sc = state.scenario;
-  if (!sc) return;
-  const H = sc.horizon;
+  const { w, h } = chartGeom();
+  if (!state.sc) return;
+  const H = state.horizon;
+  const dual = state.sexes.length > 1;
   const pw = w - PAD.l - PAD.r, ph = h - PAD.t - PAD.b;
 
   let lo = -0.35, hi = 0.35;
-  const curves = sc.effects.map(e => {
-    const pts = [];
-    for (let i = 0; i <= 120; i++) {
-      const t = invLog(i / 120, H);
-      const v = Math.log2(levelAt(e, t));
-      lo = Math.min(lo, v); hi = Math.max(hi, v);
-      pts.push([i / 120, v]);
-    }
-    return { e, pts };
+  const curves = [];
+  state.sexes.forEach(sx => {
+    state.scByS[sx].effects.forEach(e => {
+      const pts = [];
+      for (let i = 0; i <= 120; i++) {
+        const t = invLog(i / 120, H);
+        const v = Math.log2(levelAt(e, t));
+        lo = Math.min(lo, v); hi = Math.max(hi, v);
+        pts.push([i / 120, v]);
+      }
+      curves.push({ sex: sx, e, pts });
+    });
   });
   lo -= 0.18; hi += 0.18;
 
@@ -404,20 +501,23 @@ function drawChart() {
             <text x="${x}" y="${h - 4}" text-anchor="middle" font-size="9.5" fill="#8A8A82" font-family="Geist Mono, monospace">${formatClock(t)}</text>`;
   }).join('');
 
-  const u = toLog(state.t, H);
-  const pxN = xOf(u);
+  const pxN = xOf(toLog(state.t, H));
   const px = pxN.toFixed(1);
 
-  const activeId = state.active && sc.byId[state.active] ? state.active : sc.effects[0].id;
-  const base = curves.filter(c => c.e.id !== activeId)
-    .map(c => `<path d="${path(c.pts)}" fill="none" stroke="#C9C9C1" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>`).join('');
+  const activeId = state.active && movedAnywhere(state.active) ? state.active : state.sc.effects[0].id;
+  const hiCurves = curves.filter(c => c.e.id === activeId);
+  const base = curves.filter(c => c.e.id !== activeId).map(c => {
+    const stroke = dual ? SEX_COLOR[c.sex] : '#C9C9C1';
+    return `<path d="${path(c.pts)}" fill="none" stroke="${stroke}" stroke-width="1.4"
+      stroke-linecap="round" stroke-linejoin="round" opacity="${dual ? '.25' : '.8'}"/>`;
+  }).join('');
 
   let top = '', topLabel = '';
-  const hiC = curves.find(c => c.e.id === activeId);
+  const hiC = hiCurves.find(c => c.sex === state.sex) || hiCurves[0];
   if (hiC) {
     const far = hiC.pts.reduce((a, b) => (Math.abs(b[1]) > Math.abs(a[1]) ? b : a));
     const up = far[1] >= 0;
-    const color = up ? 'var(--up)' : 'var(--down)';
+    const color = dual ? '#0E0E10' : (up ? 'var(--up)' : 'var(--down)');
     const name = HORMONE_BY_ID[hiC.e.id].name;
     const est = name.length * 6.4;
     const fx = xOf(far[0]);
@@ -439,18 +539,22 @@ function drawChart() {
     const dotY = yOf(Math.log2(levelAt(hiC.e, state.t)));
     let ly = up ? above : below;
     if (stuck) ly = Math.abs(above - dotY) >= Math.abs(below - dotY) ? above : below;
-    top = `<path d="${path(hiC.pts)}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    top = hiCurves.map(c => `<path d="${path(c.pts)}" fill="none" stroke="${dual ? SEX_COLOR[c.sex] : color}"
+      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
     topLabel = `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}"
         text-anchor="${anchor}" font-size="11.5" font-weight="500" fill="${color}"
         stroke="#fff" stroke-width="3.5" paint-order="stroke">${name}</text>`;
   }
 
-  let head = `<line x1="${px}" y1="${PAD.t - 4}" x2="${px}" y2="${PAD.t + ph}" stroke="#0E0E10" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`;
-  const dots = [hiC, ...curves.filter(c => c !== hiC).slice(0, 3)].filter(Boolean).map(c => {
+  const head = `<line x1="${px}" y1="${PAD.t - 4}" x2="${px}" y2="${PAD.t + ph}" stroke="#0E0E10" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`;
+  const dotList = dual
+    ? hiCurves
+    : [hiC, ...curves.filter(c => c !== hiC).slice(0, 3)].filter(Boolean);
+  const dots = dotList.map(c => {
     const v = Math.log2(levelAt(c.e, state.t));
-    const up = v > 0.02, flat = Math.abs(v) <= 0.02;
-    const color = flat ? '#B8B8B2' : up ? 'var(--up)' : 'var(--down)';
-    return `<circle cx="${px}" cy="${yOf(v).toFixed(1)}" r="${c === hiC ? 4.5 : 3}" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+    const upv = v > 0.02, flat = Math.abs(v) <= 0.02;
+    const color = dual ? SEX_COLOR[c.sex] : (flat ? '#B8B8B2' : upv ? 'var(--up)' : 'var(--down)');
+    return `<circle cx="${px}" cy="${yOf(v).toFixed(1)}" r="${c === hiC || dual ? 4.5 : 3}" fill="${color}" stroke="#fff" stroke-width="2"/>`;
   }).join('');
 
   host.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">
@@ -460,14 +564,13 @@ function drawChart() {
 /* ─── время ─────────────────────────────────────────────── */
 
 function updateTime(t) {
-  const sc = state.scenario;
-  state.t = Math.max(0, Math.min(sc.horizon, t));
+  state.t = Math.max(0, Math.min(state.horizon, t));
   $('timeValue').textContent = state.t < 1 ? 'начало' : formatClock(state.t);
   $('timeCaption').textContent = state.t < 1 ? 'момент события' : 'после начала';
-  $('scrub').value = Math.round(toLog(state.t, sc.horizon) * 1000);
+  $('scrub').value = Math.round(toLog(state.t, state.horizon) * 1000);
 
   let now = 0, max = 0;
-  sc.effects.forEach(e => {
+  state.sc.effects.forEach(e => {
     now += Math.abs(Math.log2(levelAt(e, state.t)));
     max += Math.max(Math.abs(Math.log2(e.peak)), e.hasReb ? Math.abs(Math.log2(e.reb)) : 0);
   });
@@ -476,20 +579,21 @@ function updateTime(t) {
 
   paintLevels();
   drawChart();
+  if (state.tipPinned) renderTip(playheadX());
 }
 
 function startPlay() {
-  const sc = state.scenario;
   state.playing = true;
   $('playIcon').setAttribute('d', 'M4 3h3v10H4zM9 3h3v10H9z');
+  const H = state.horizon;
   const dur = 9000;
-  const from = state.t >= sc.horizon * 0.98 ? 0 : toLog(state.t, sc.horizon);
+  const from = state.t >= H * 0.98 ? 0 : toLog(state.t, H);
   const t0 = performance.now();
   const tick = (now) => {
     if (!state.playing) return;
     const u = from + (now - t0) / dur * (1 - from);
-    if (u >= 1) { updateTime(sc.horizon); stopPlay(); return; }
-    updateTime(invLog(u, sc.horizon));
+    if (u >= 1) { updateTime(H); stopPlay(); return; }
+    updateTime(invLog(u, H));
     state.raf = requestAnimationFrame(tick);
   };
   state.raf = requestAnimationFrame(tick);
@@ -508,62 +612,91 @@ function chartPointer(ev) {
   const pw = r.width - PAD.l - PAD.r;
   const u = Math.max(0, Math.min(1, (ev.clientX - r.left - PAD.l) / pw));
   stopPlay();
-  updateTime(invLog(u, state.scenario.horizon));
-  showTip(ev.clientX - r.left, r);
+  updateTime(invLog(u, state.horizon));
+  state.tipPinned = true;                 // подсказка закрывается только крестиком
+  renderTip(playheadX());
 }
 
-function showTip(x, rect, tAt) {
+/* x — позиция в пикселях внутри .chart-wrap; t по умолчанию — текущее время. */
+function renderTip(x, tAt) {
   const tip = $('chartTip');
-  const sc = state.scenario;
   const t = tAt != null ? tAt : state.t;
-  const rows = sc.effects
-    .map(e => ({ e, v: levelAt(e, t) }))
-    .sort((a, b) => Math.abs(Math.log2(b.v)) - Math.abs(Math.log2(a.v)))
-    .slice(0, 3)
-    .filter(r => Math.abs(r.v - 1) > 0.03);
-  if (!rows.length) { tip.hidden = true; return; }
+  const dual = state.sexes.length > 1;
+  const ids = [...new Set(state.sexes.flatMap(s => state.scByS[s].effects.map(e => e.id)))]
+    .map(id => ({
+      id,
+      dev: Math.max(...state.sexes.map(s => {
+        const e = effFor(s, id); return e ? Math.abs(Math.log2(levelAt(e, t))) : 0;
+      })),
+    }))
+    .sort((a, b) => b.dev - a.dev)
+    .filter(r => r.dev > 0.043)
+    .slice(0, 3);
+
+  if (!ids.length) { hideTip(); return; }
   tip.hidden = false;
-  tip.innerHTML = `<b>${t < 1 ? 'момент события' : formatClock(t) + ' спустя'}</b>` +
-    rows.map(r => `<div class="tip-row"><span>${HORMONE_BY_ID[r.e.id].name}</span><span class="tip-v">${formatDelta(r.v)}</span></div>`).join('');
+  $('tipBody').innerHTML = `<b>${t < 1 ? 'момент события' : formatClock(t) + ' спустя'}</b>` +
+    ids.map(r => {
+      const vals = state.sexes.map(s => {
+        const e = effFor(s, r.id);
+        const v = e ? formatDelta(levelAt(e, t)) : 'норма';
+        return dual ? `<span class="tip-v tip-v--${s}">${SEX_LABEL[s]} ${v}</span>` : `<span class="tip-v">${v}</span>`;
+      }).join('');
+      return `<div class="tip-row"><span>${HORMONE_BY_ID[r.id].name}</span><span class="tip-vals">${vals}</span></div>`;
+    }).join('');
+
+  const rect = $('chart').getBoundingClientRect();
   const w = tip.offsetWidth;
   tip.style.left = Math.max(w / 2 + 4, Math.min(rect.width - w / 2 - 4, x)) + 'px';
-  tip.style.top = '54px';
+  tip.style.top = (PAD.t + 6) + 'px';
 }
-function hideTip() { $('chartTip').hidden = true; }
+function hideTip() { $('chartTip').hidden = true; state.tipPinned = false; }
 
 /* ─── карточка гормона ──────────────────────────────────── */
 
 function showDetail(id, anchor) {
   const h = HORMONE_BY_ID[id];
-  const eff = state.scenario.byId[id];
-  const lvl = eff ? levelAt(eff, state.t) : 1;
   const base = baseline(state.sex, state.age, id);
   const sexTitle = SEXES.find(s => s.id === state.sex).title.toLowerCase();
   const ageTitle = AGES.find(a => a.id === state.age).title;
+  const dual = state.sexes.length > 1;
+
+  const nowRows = dual
+    ? `<div class="detail-now detail-now--dual" id="detailNow">${state.sexes.map(s => {
+        const e = effFor(s, id);
+        return `<span class="detail-duo detail-duo--${s}" data-s="${s}">
+          <i>${SEX_LABEL[s]}</i>
+          <b class="mono">${e ? formatDelta(levelAt(e, state.t)) : 'норма'}</b></span>`;
+      }).join('')}<span class="detail-now-l" id="detailNowL">сейчас, через ${state.t < 1 ? 'момент' : formatClock(state.t)}</span></div>`
+    : (() => {
+        const eff = state.sc.byId[id];
+        const lvl = eff ? levelAt(eff, state.t) : 1;
+        return `<div class="detail-now" id="detailNow">
+          <span class="detail-now-v" id="detailNowV">${eff ? formatDelta(lvl) : 'норма'}</span>
+          <span class="detail-now-l" id="detailNowL">${eff ? 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t)) : 'в этом сценарии не меняется'}</span>
+        </div>`;
+      })();
+
+  const note = state.sexes.map(s => effFor(s, id)).find(e => e && e.note);
 
   $('detailBody').innerHTML = `
     <div class="detail-head">
       <div class="detail-name">${h.name}</div>
       <div class="detail-latin">${h.latin} · ${h.role.toLowerCase()}</div>
     </div>
-    <div class="detail-now">
-      <span class="detail-now-v" id="detailNowV">${eff ? formatDelta(lvl) : 'норма'}</span>
-      <span class="detail-now-l" id="detailNowL">${eff ? 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t)) : 'в этом сценарии не меняется'}</span>
-    </div>
-    ${eff && eff.note ? `<p class="detail-note">${eff.note}</p>` : ''}
-    <button class="detail-fav" id="detailFav" type="button" data-h="${id}" aria-pressed="${state.fav.has(id)}">
-      <span aria-hidden="true">★</span><span class="detail-fav-text">${state.fav.has(id) ? 'В избранном' : 'Добавить в избранное'}</span>
-    </button>
+    ${nowRows}
+    ${note ? `<p class="detail-note">${note.note}</p>` : ''}
     <div class="detail-sec"><h4>За что отвечает</h4><p>${h.what}</p></div>
     <div class="detail-sec"><h4>Где и как вырабатывается</h4><p>${h.where}</p></div>
     <div class="detail-sec"><h4>Как поддерживать</h4><p>${h.support}</p></div>
     ${base ? `<p class="detail-base"><b>Ваш базовый фон:</b> ≈${Math.round(base.value * 100)}% от пикового уровня молодости (${sexTitle} пол, ${ageTitle}). ${base.note}</p>` : ''}
   `;
-  $('detailFav').onclick = (ev) => { ev.stopPropagation(); toggleFav(id); };
   const d = $('detail');
+  const wasHidden = d.hidden;
   d.hidden = false;
   if (isSheet()) {
     $('scrim').hidden = false;
+    if (wasHidden) lockScroll();
   } else if (anchor) {
     const r = anchor.getBoundingClientRect();
     const dw = d.offsetWidth, dh = d.offsetHeight;
@@ -574,18 +707,33 @@ function showDetail(id, anchor) {
     d.style.top = Math.max(12, Math.min(innerHeight - dh - 12, r.top - 8)) + 'px';
   }
 }
+
 function updateDetailNow() {
-  const v = $('detailNowV'), l = $('detailNowL');
-  if (!v || !state.active) return;
-  const eff = state.scenario.byId[state.active];
-  if (!eff) return;
+  if (!state.active || $('detail').hidden) return;
+  const l = $('detailNowL');
+  const stamp = 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t));
+  const duos = document.querySelectorAll('.detail-duo');
+  if (duos.length) {
+    duos.forEach(d => {
+      const e = effFor(d.dataset.s, state.active);
+      d.querySelector('b').textContent = e ? formatDelta(levelAt(e, state.t)) : 'норма';
+    });
+    if (l) l.textContent = stamp;
+    return;
+  }
+  const v = $('detailNowV');
+  const eff = state.sc.byId[state.active];
+  if (!v || !eff) return;
   v.textContent = formatDelta(levelAt(eff, state.t));
-  l.textContent = 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t));
+  if (l) l.textContent = stamp;
 }
+
 function hideDetail() {
   clearTimeout(state.hideTimer);
+  const wasOpen = !$('detail').hidden;
   $('detail').hidden = true;
   $('scrim').hidden = true;
+  if (wasOpen && isSheet()) unlockScroll();
 }
 /* Пауза перед закрытием: курсор успевает дойти от карточки до окна. */
 function scheduleHide() {
@@ -603,25 +751,38 @@ function closeDetail() {
 /* ─── события ───────────────────────────────────────────── */
 
 function bind() {
-  $('profileBtn').onclick = openOnboarding;
+  $('navProfile').onclick = openOnboarding;
+  $('burgerBtn').onclick = () => (state.navOpen ? closeNav() : openNav());
+  $('navClose').onclick = closeNav;
+  $('navScrim').onclick = closeNav;
+  $('navHintOk').onclick = hideMenuHint;
+  $('sectChip').onclick = () => {
+    closeNav();
+    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' });
+  };
+
   $('playBtn').onclick = () => (state.playing ? stopPlay() : startPlay());
-  $('scrub').oninput = (e) => { stopPlay(); updateTime(invLog(e.target.value / 1000, state.scenario.horizon)); };
+  $('scrub').oninput = (e) => { stopPlay(); updateTime(invLog(e.target.value / 1000, state.horizon)); };
   $('detailClose').onclick = closeDetail;
   $('scrim').onclick = closeDetail;
+  $('tipClose').onclick = (e) => { e.stopPropagation(); hideTip(); };
 
-  $('resetBtn').onclick = () => { stopPlay(); closeDetail(); updateTime(peakMoment(state.scenario)); };
+  $('resetBtn').onclick = () => { stopPlay(); closeDetail(); updateTime(peakMoment(state.sc)); };
 
   $('segActive').onclick = () => { state.view = 'active'; renderHormones(); };
   $('segAll').onclick = () => { state.view = 'all'; renderHormones(); };
-  $('segFav').onclick = () => {
-    if (state.fav.size === 0) { openFavModal(); return; }
-    state.view = 'fav'; renderHormones();
+
+  $('sexLegend').addEventListener('click', (e) => {
+    const b = e.target.closest('.sexbtn');
+    if (b) toggleSex(b.dataset.sex);
+  });
+
+  const more = $('footMore');
+  more.onclick = () => {
+    const open = $('footWarn').classList.toggle('is-open');
+    more.setAttribute('aria-expanded', open);
+    more.textContent = open ? 'Less' : 'More';
   };
-  $('favEdit').onclick = openFavModal;
-  $('favClose').onclick = closeFavModal;
-  $('favDone').onclick = closeFavModal;
-  $('favClear').onclick = () => { state.fav.clear(); saveFav(); renderFavModal(); syncFavUI(); renderHormones(); };
-  $('favModal').addEventListener('click', (e) => { if (e.target === $('favModal')) closeFavModal(); });
 
   const det = $('detail');
   det.addEventListener('mouseenter', () => clearTimeout(state.hideTimer));
@@ -636,26 +797,36 @@ function bind() {
 
   const wrap = document.querySelector('.chart-wrap');
   let dragging = false;
-  wrap.addEventListener('pointerdown', (e) => { dragging = true; wrap.setPointerCapture(e.pointerId); chartPointer(e); });
+  wrap.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.chart-tip')) return;
+    dragging = true; wrap.setPointerCapture(e.pointerId); chartPointer(e);
+  });
   wrap.addEventListener('pointermove', (e) => {
     if (dragging) { chartPointer(e); e.preventDefault(); }
-    else if (!isTouch) {
+    else if (!isTouch && !state.tipPinned) {
       const r = $('chart').getBoundingClientRect();
       const pw = r.width - PAD.l - PAD.r;
       const uu = Math.max(0, Math.min(1, (e.clientX - r.left - PAD.l) / pw));
-      showTip(e.clientX - r.left, r, invLog(uu, state.scenario.horizon));
+      renderTip(e.clientX - r.left, invLog(uu, state.horizon));
     }
   });
   wrap.addEventListener('pointerup', () => { dragging = false; });
   wrap.addEventListener('pointercancel', () => { dragging = false; });
-  wrap.addEventListener('mouseleave', hideTip);
+  wrap.addEventListener('mouseleave', () => { if (!state.tipPinned) hideTip(); });
 
   addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeDetail(); closeOnboarding(); closeFavModal(); }
+    if (e.key === 'Escape') { closeDetail(); closeOnboarding(); closeNav(); hideTip(); }
   });
 
   let rt;
-  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawChart, 120); });
+  addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (!isSheet() && state.navOpen) closeNav();
+      drawChart();
+      if (state.tipPinned) renderTip(playheadX());
+    }, 120);
+  });
   addEventListener('hashchange', () => {
     const id = location.hash.slice(1);
     if (SITUATION_BY_ID[id] && id !== state.sit) selectSituation(id);
@@ -670,17 +841,18 @@ if (SITUATION_BY_ID[hash]) { state.sit = hash; state.cat = SITUATION_BY_ID[hash]
 /* Ссылка вида ?p=f-a36 открывает карту сразу под нужный профиль. */
 const fromLink = (new URLSearchParams(location.search).get('p') || '').split('-');
 if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1])) {
-  state.sex = fromLink[0]; state.age = fromLink[1]; saveProfile();
+  state.sex = fromLink[0]; state.age = fromLink[1]; neverConfigured = false; saveProfile();
 }
 
-loadFav();
 bind();
 if (state.sex || loadProfile()) {
+  state.sexesOn = new Set([state.sex]);
   applyProfile();
   renderAll();
 } else {
-  openOnboarding();
   state.sex = 'm'; state.age = 'a26';
+  state.sexesOn = new Set([state.sex]);
   applyProfile();
   renderAll();
+  openOnboarding();
 }

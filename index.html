@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Гормональная карта — что происходит с телом в разных ситуациях</title>
-<meta name="description" content="Интерактивная карта гормональной системы: 21 гормон, 38 жизненных сценариев. Видно, что поднимается, что падает и сколько времени нужно системе, чтобы вернуться к норме.">
+<meta name="description" content="Интерактивная карта гормональной системы: 21 гормон, 39 жизненных сценариев. Видно, что поднимается, что падает и сколько времени нужно системе, чтобы вернуться к норме.">
 <meta name="theme-color" content="#F5F5F3">
 <meta property="og:title" content="Гормональная карта">
-<meta property="og:description" content="21 гормон, 38 сценариев: секс, расставание, недосып, алкоголь, тренировки, велозаезды, плавание. Что меняется и когда вернётся к норме.">
+<meta property="og:description" content="21 гормон, 39 сценариев: секс, расставание, недосып, алкоголь, тренировки, велозаезды, плавание. Что меняется и когда вернётся к норме.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=9">
+<link rel="stylesheet" href="css/style.css?v=10">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
 </head>
 <body>
@@ -35,7 +35,7 @@
     </div>
 
     <button class="ob-submit" id="obSubmit" disabled>Смотреть карту</button>
-    <p class="ob-foot">Потом можно поменять в правом верхнем углу. Ничего не отправляется на сервер — выбор хранится только в вашем браузере.</p>
+    <p class="ob-foot">Потом можно поменять в меню разделов. Ничего не отправляется на сервер — выбор хранится только в вашем браузере.</p>
   </div>
 </div>
 
@@ -49,16 +49,29 @@
       </g>
     </svg><span class="wordmark-text">Гормональная карта</span>
   </a>
-  <button class="profile-pill" id="profileBtn" aria-label="Изменить пол и возраст">
-    <span id="profileText">—</span>
-    <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <button class="sect-chip" id="sectChip" title="Наверх, к выбору сценария"><span id="sectChipText">—</span></button>
+  <button class="burger" id="burgerBtn" aria-label="Меню разделов" aria-expanded="false" aria-controls="picker">
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
   </button>
 </header>
 
-<nav class="picker" aria-label="Категории">
+<nav class="picker" id="picker" aria-label="Разделы и сценарии">
+  <div class="nav-top">
+    <span class="nav-title">Разделы</span>
+    <button class="nav-close" id="navClose" aria-label="Закрыть меню">✕</button>
+  </div>
+  <button class="nav-profile" id="navProfile">
+    <span class="nav-profile-label">Пол и возраст</span>
+    <span class="nav-profile-value" id="navProfileText">—</span>
+  </button>
   <div class="cats" id="cats" role="tablist" aria-label="Категории"></div>
   <div class="chips" id="chips" role="tablist" aria-label="Ситуации"></div>
+  <div class="nav-hint" id="navHint" hidden>
+    <p class="nav-hint-text">Здесь живёт вся навигация: сверху — разделы, ниже — сценарии внутри раздела. Начните, например, с подсвеченного.</p>
+    <button class="nav-hint-ok" id="navHintOk">Понятно</button>
+  </div>
 </nav>
+<div class="nav-scrim" id="navScrim" hidden></div>
 
 <main>
   <section class="hero">
@@ -78,16 +91,28 @@
         <span class="time-value" id="timeValue">0</span>
         <span class="time-caption" id="timeCaption">от начала события</span>
       </div>
-      <button class="reset" id="resetBtn" title="Вернуть график к началу сценария">
-        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 3.2a4.8 4.8 0 1 0 4.6 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 1.2v4h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <button class="reset" id="resetBtn" title="Вернуть график к началу сценария" aria-label="Сбросить график">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <path d="M10.4 3.84A4.8 4.8 0 1 1 7.17 3.27" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <path d="M9.73 2.82 7.03 5.33 6.33 1.39Z" fill="currentColor"/>
+        </svg>
         <span>Сбросить</span>
       </button>
       <div class="time-load" id="timeLoad"></div>
     </div>
 
+    <div class="sex-legend" id="sexLegend" hidden>
+      <span class="sex-legend-label">Сравнить:</span>
+      <button class="sexbtn sexbtn--m" data-sex="m" type="button" aria-pressed="false"><i></i>М</button>
+      <button class="sexbtn sexbtn--f" data-sex="f" type="button" aria-pressed="false"><i></i>Ж</button>
+    </div>
+
     <div class="chart-wrap">
       <div class="chart" id="chart" role="img" aria-label="График отклонения гормонов от нормы во времени"></div>
-      <div class="chart-tip" id="chartTip" hidden></div>
+      <div class="chart-tip" id="chartTip" hidden>
+        <button class="tip-close" id="tipClose" aria-label="Закрыть подсказку">✕</button>
+        <div id="tipBody"></div>
+      </div>
     </div>
 
     <input class="scrub" id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Время после события">
@@ -95,11 +120,9 @@
 
   <section class="hfilter">
     <div class="seg" role="tablist" aria-label="Что показывать">
-      <button class="seg-btn" id="segAll" role="tab" aria-selected="false"><span>Все</span> <span class="seg-count" id="cntAll">21</span></button>
       <button class="seg-btn" id="segActive" role="tab" aria-selected="true"><span>Задействованные</span></button>
-      <button class="seg-btn" id="segFav" role="tab" aria-selected="false"><span>Избранные</span> <span class="seg-count" id="favCount">0</span></button>
+      <button class="seg-btn" id="segAll" role="tab" aria-selected="false"><span>Все</span> <span class="seg-count" id="cntAll">21</span></button>
     </div>
-    <button class="seg-edit" id="favEdit">Настроить</button>
   </section>
 
   <section class="hormones" id="hormones" aria-label="Гормоны"></section>
@@ -108,27 +131,19 @@
     <h2 class="recovery-title">Сколько ждать возврата к норме</h2>
     <p class="recovery-text" id="recoveryText"></p>
     <div class="recovery-list" id="recoveryList"></div>
+    <div class="timing">
+      <h3 class="timing-title">Когда лучше — чтобы это работало на фон, а не против</h3>
+      <p class="timing-text" id="timingText"></p>
+    </div>
   </section>
-
-  <footer class="foot">
-    <p class="foot-warn">Это справочная модель, а не диагностика. Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы. Направление и механизм каждой реакции сверены с Endotext (NCBI Bookshelf); величина отклонения — усреднение по отдельным исследованиям, сам учебник кратности не приводит.</p>
-    <p class="foot-meta">21 гормон · 38 сценариев · направления и механизмы сверены с <a href="https://www.ncbi.nlm.nih.gov/books/NBK278943/">Endotext</a> · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
-  </footer>
 </main>
 
-<div class="onboarding" id="favModal" hidden>
-  <div class="ob-card ob-card--wide">
-    <button class="ob-close" id="favClose" aria-label="Закрыть">✕</button>
-    <p class="ob-eyebrow">Избранные гормоны</p>
-    <h2 class="ob-title">Что держать перед глазами</h2>
-    <p class="ob-lead">Отметьте те, за которыми следите. Под графиком можно будет переключаться между полным списком и только этими.</p>
-    <div class="fav-list" id="favList"></div>
-    <div class="fav-actions">
-      <button class="ob-submit ob-submit--ghost" id="favClear">Снять все</button>
-      <button class="ob-submit" id="favDone">Готово</button>
-    </div>
-  </div>
-</div>
+<footer class="foot">
+  <p class="foot-warn" id="footWarn">
+    <span class="foot-warn-lead">Это справочная модель, а не диагностика.</span><span class="foot-warn-rest"> Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы. Направление и механизм каждой реакции сверены с Endotext (NCBI Bookshelf); величина отклонения — усреднение по отдельным исследованиям, сам учебник кратности не приводит.</span><button class="foot-more" id="footMore" type="button" aria-expanded="false">More</button>
+  </p>
+  <p class="foot-meta">21 гормон · 39 сценариев · направления и механизмы сверены с <a href="https://www.ncbi.nlm.nih.gov/books/NBK278943/">Endotext</a> · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
+</footer>
 
 <div class="detail" id="detail" hidden role="dialog" aria-label="Описание гормона">
   <button class="detail-close" id="detailClose" aria-label="Закрыть">✕</button>
@@ -136,6 +151,6 @@
 </div>
 <div class="scrim" id="scrim" hidden></div>
 
-<script type="module" src="js/app.js?v=9"></script>
+<script type="module" src="js/app.js?v=10"></script>
 </body>
 </html>

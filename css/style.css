@@ -12,6 +12,10 @@
   --down:#2E63A6;
   --down-soft:#DFE7F2;
   --flat:#B8B8B2;
+  --sex-m:#3E8FD4;
+  --sex-f:#D9569B;
+  --sex-m-soft:#E1EDF9;
+  --sex-f-soft:#FAE3EE;
   --radius:20px;
   --radius-s:12px;
   --shadow:0 1px 2px rgba(16,16,20,.04), 0 12px 32px -18px rgba(16,16,20,.18);
@@ -77,39 +81,52 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .ob-foot{margin-top:16px; font-size:12px; line-height:1.45; color:var(--ink-3); text-align:center}
 
 /* ─── шапка ─────────────────────────────────────────────── */
+/* Шапка узкая и липкая: в ней только имя сайта и чип текущего сценария.
+   Сама навигация листается вместе со страницей (на мобильном — прячется в бургер). */
 .topbar{
-  position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between;
-  gap:12px; height:var(--topbar-h); padding:0 var(--pad); max-width:1080px; margin:0 auto;
+  position:sticky; top:0; z-index:40; display:flex; align-items:center;
+  gap:10px; height:var(--topbar-h); padding:0 var(--pad); max-width:1080px; margin:0 auto;
   background:rgba(244,244,241,.8); backdrop-filter:blur(20px) saturate(1.6);
   -webkit-backdrop-filter:blur(20px) saturate(1.6);
 }
 .wordmark{
   display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:500;
-  letter-spacing:-.02em; text-decoration:none; white-space:nowrap; min-width:0;
+  letter-spacing:-.02em; text-decoration:none; white-space:nowrap; min-width:0; flex:none;
 }
 .wordmark-text{overflow:hidden; text-overflow:ellipsis}
 .wordmark-mark{width:20px; height:20px; flex:none; color:var(--ink); display:block}
-.profile-pill{
-  display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:100px;
-  background:var(--surface); box-shadow:0 1px 2px rgba(16,16,20,.06); font-size:13.5px;
-  color:var(--ink-2); transition:.18s var(--ease); white-space:nowrap;
+
+.sect-chip{
+  display:inline-flex; align-items:center; gap:6px; min-width:0; max-width:46%;
+  padding:6px 13px; border-radius:100px; background:var(--ink); color:#fff;
+  font-size:13px; font-weight:500; letter-spacing:-.01em; white-space:nowrap;
+  transition:.18s var(--ease);
 }
-.profile-pill:hover{color:var(--ink); transform:translateY(-1px)}
+.sect-chip span{overflow:hidden; text-overflow:ellipsis}
+.sect-chip:hover{transform:translateY(-1px)}
+.sect-chip::before{
+  content:""; width:5px; height:5px; border-radius:50%; background:#fff; opacity:.6; flex:none;
+}
+
+.burger{
+  display:none; width:38px; height:38px; border-radius:12px; margin-left:auto; flex:none;
+  align-items:center; justify-content:center; background:var(--surface);
+  box-shadow:0 1px 2px rgba(16,16,20,.06); color:var(--ink); transition:.18s var(--ease);
+}
+.burger:hover{background:#fff}
 
 /* ─── выбор ситуации ────────────────────────────────────── */
 .picker{
-  position:sticky; top:var(--topbar-h); z-index:35; padding:2px 0 6px;
-  background:rgba(244,244,241,.92); backdrop-filter:blur(20px) saturate(1.6);
-  -webkit-backdrop-filter:blur(20px) saturate(1.6);
+  max-width:1080px; margin:0 auto; padding:6px var(--pad) 14px;
+  display:grid; grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"cats prof" "chips chips"; align-items:start; column-gap:12px;
 }
+.cats{grid-area:cats}
+.chips{grid-area:chips}
+.nav-profile{grid-area:prof}
+.nav-top{display:none}
 /* Ситуации переносятся на столько строк, сколько нужно: без скрытого скролла. */
-.cats,.chips{
-  display:flex; flex-wrap:wrap; gap:6px;
-  padding:4px var(--pad); max-width:1080px; margin:0 auto;
-}
-.chips{
-  padding-bottom:14px;
-}
+.cats,.chips{display:flex; flex-wrap:wrap; gap:6px; padding:4px 0}
 .cat{
   flex:none; padding:6px 12px; border-radius:100px; font-size:13.5px; color:var(--ink-3);
   transition:.18s var(--ease); white-space:nowrap;
@@ -130,6 +147,31 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 }
 .chip:hover{color:var(--ink); border-color:#D6D6CF}
 .chip[aria-selected="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.chip.is-hint{
+  border-color:var(--ink); box-shadow:0 0 0 3px rgba(14,14,16,.12);
+  animation:hintpulse 1.6s var(--ease) infinite;
+}
+@keyframes hintpulse{
+  0%,100%{box-shadow:0 0 0 3px rgba(14,14,16,.12)}
+  50%{box-shadow:0 0 0 7px rgba(14,14,16,.05)}
+}
+.nav-profile{
+  display:inline-flex; align-items:center; gap:8px; padding:6px 13px; border-radius:100px;
+  background:var(--surface); border:1px solid var(--line); font-size:13px; color:var(--ink-2);
+  white-space:nowrap; transition:.18s var(--ease); margin-top:4px;
+}
+.nav-profile:hover{color:var(--ink); border-color:#D6D6CF}
+.nav-profile-label{color:var(--ink-3)}
+.nav-profile-value{font-weight:500; color:var(--ink)}
+.nav-scrim{position:fixed; inset:0; z-index:42; background:rgba(14,14,16,.3); animation:fade .2s}
+.nav-scrim[hidden]{display:none}
+.nav-hint{
+  grid-column:1 / -1; display:flex; align-items:center; gap:14px; margin-top:10px;
+  padding:11px 12px 11px 16px; border-radius:100px; background:var(--ink); color:#fff;
+}
+.nav-hint[hidden]{display:none}
+.nav-hint-text{font-size:13px; line-height:1.4}
+.nav-hint-ok{padding:6px 14px; border-radius:100px; background:#fff; color:var(--ink); font-size:12.5px; font-weight:500; flex:none; margin-left:auto}
 
 /* ─── герой ─────────────────────────────────────────────── */
 .hero{padding:22px 0 0; max-width:720px}
@@ -170,17 +212,41 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .reset:hover{background:#F0F0EB; color:var(--ink)}
 .reset span{white-space:nowrap}
 
+/* ─── легенда полов ─────────────────────────────────────── */
+.sex-legend{display:flex; align-items:center; gap:6px; margin:2px 0 -4px}
+.sex-legend[hidden]{display:none}
+.sex-legend-label{font-size:12px; color:var(--ink-3); margin-right:2px}
+.sexbtn{
+  display:inline-flex; align-items:center; gap:6px; padding:4px 11px 4px 8px; border-radius:100px;
+  font-size:12.5px; font-weight:500; color:var(--ink-3); background:var(--surface-2);
+  border:1px solid transparent; transition:.16s var(--ease);
+}
+.sexbtn i{width:9px; height:9px; border-radius:50%; background:currentColor; opacity:.35; flex:none}
+.sexbtn:hover{color:var(--ink-2)}
+.sexbtn--m[aria-pressed="true"]{color:var(--sex-m); background:var(--sex-m-soft); border-color:rgba(62,143,212,.35)}
+.sexbtn--f[aria-pressed="true"]{color:var(--sex-f); background:var(--sex-f-soft); border-color:rgba(217,86,155,.35)}
+.sexbtn[aria-pressed="true"] i{opacity:1}
+
 .chart-wrap{position:relative; touch-action:pan-y}
 .chart{width:100%; height:256px; cursor:crosshair; user-select:none}
 .chart svg{display:block; width:100%; height:100%; overflow:visible}
 .chart-tip{
-  position:absolute; z-index:5; pointer-events:none; background:var(--ink); color:#fff;
-  border-radius:10px; padding:8px 10px; font-size:12px; line-height:1.45; white-space:nowrap;
-  box-shadow:0 8px 24px -10px rgba(0,0,0,.4); transform:translate(-50%,-115%); transition:opacity .15s;
+  position:absolute; z-index:5; background:var(--ink); color:#fff;
+  border-radius:10px; padding:8px 26px 8px 10px; font-size:12px; line-height:1.45; white-space:nowrap;
+  box-shadow:0 8px 24px -10px rgba(0,0,0,.4); transform:translate(-50%,0); transition:opacity .15s;
 }
+.chart-tip[hidden]{display:none}
 .chart-tip b{font-weight:500}
-.chart-tip .tip-row{display:flex; justify-content:space-between; gap:12px}
+.chart-tip .tip-row{display:flex; justify-content:space-between; gap:14px}
+.chart-tip .tip-vals{display:inline-flex; gap:8px}
 .chart-tip .tip-v{font-family:"Geist Mono",monospace; opacity:.85}
+.chart-tip .tip-v--m{color:#9CC8EE; opacity:1}
+.chart-tip .tip-v--f{color:#F1A6CB; opacity:1}
+.tip-close{
+  position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%;
+  display:grid; place-items:center; color:#fff; opacity:.55; font-size:11px; line-height:1;
+}
+.tip-close:hover{opacity:1; background:rgba(255,255,255,.14)}
 
 .scrub{
   -webkit-appearance:none; appearance:none; height:26px; background:transparent;
@@ -215,37 +281,6 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   font-family:"Geist Mono",monospace; font-size:11px; padding:1px 5px; border-radius:100px;
   background:rgba(14,14,16,.07); color:var(--ink-2);
 }
-.seg-edit{font-size:13.5px; color:var(--ink-3); padding:6px 4px; transition:.18s var(--ease); white-space:nowrap}
-.seg-edit:hover{color:var(--ink)}
-.hempty{
-  background:var(--surface); border-radius:var(--radius-s); padding:26px 20px; text-align:center;
-  box-shadow:0 1px 2px rgba(16,16,20,.04);
-}
-.hempty p{font-size:14.5px; color:var(--ink-2); margin-bottom:14px}
-.hempty button{padding:10px 18px; border-radius:100px; background:var(--ink); color:#fff; font-size:14px}
-
-/* ─── окно избранного ───────────────────────────────────── */
-.ob-card--wide{max-width:560px}
-.fav-list{max-height:min(46vh,380px); overflow-y:auto; margin:4px -6px 18px; padding:0 6px; overscroll-behavior:contain}
-.fav-group{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin:14px 0 6px 2px}
-.fav-group:first-child{margin-top:4px}
-.fav-item{
-  display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 11px;
-  border-radius:11px; transition:.15s var(--ease);
-}
-.fav-item:hover{background:var(--surface-2)}
-.fav-box{
-  width:19px; height:19px; flex:none; border-radius:6px; border:1.5px solid var(--line);
-  display:grid; place-items:center; transition:.15s var(--ease);
-}
-.fav-item[aria-pressed="true"] .fav-box{background:var(--ink); border-color:var(--ink)}
-.fav-box svg{opacity:0; transition:.15s var(--ease)}
-.fav-item[aria-pressed="true"] .fav-box svg{opacity:1}
-.fav-item > span:last-child{font-size:14.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.fav-item em{font-style:normal; color:var(--ink-3); font-size:12.5px; margin-left:6px}
-.fav-actions{display:grid; grid-template-columns:1fr 1.6fr; gap:8px}
-.ob-submit--ghost{background:var(--surface-2); color:var(--ink-2)}
-.ob-submit--ghost:hover{background:#F0F0EB}
 
 /* ─── гормоны ───────────────────────────────────────────── */
 .hormones{margin-bottom:34px}
@@ -265,7 +300,6 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .hcard.is-flat{opacity:.55}
 .hcard.is-flat:hover{opacity:1}
 .hname{font-size:15px; font-weight:500; letter-spacing:-.015em; line-height:1.25; min-width:0}
-.hstar{color:var(--ink-3); font-size:11px; margin-left:5px; vertical-align:1px}
 .hrole{display:block; font-size:11.5px; color:var(--ink-3); font-weight:400; letter-spacing:0; margin-top:1px;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .hbar{position:relative; width:104px; height:7px; flex:none}
@@ -281,6 +315,18 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   white-space:nowrap;
 }
 .hval.up{color:var(--up)} .hval.down{color:var(--down)} .hval.flat{color:var(--ink-3)}
+.hval.sex-m{color:var(--sex-m)} .hval.sex-f{color:var(--sex-f)}
+
+/* Режим сравнения: у гормона две шкалы — мужская и женская. */
+.hcard--dual{grid-template-columns:minmax(0,1fr) auto}
+.hduo{display:grid; gap:5px}
+.hrow{display:flex; align-items:center; gap:9px}
+.hsex{
+  font-style:normal; font-size:10.5px; font-weight:500; width:15px; text-align:center;
+  border-radius:4px; padding:1px 0; flex:none;
+}
+.hsex--m{color:var(--sex-m); background:var(--sex-m-soft)}
+.hsex--f{color:var(--sex-f); background:var(--sex-f-soft)}
 
 /* ─── восстановление ────────────────────────────────────── */
 .recovery{background:var(--surface); border-radius:var(--radius); padding:24px 20px; margin-bottom:28px; box-shadow:var(--shadow)}
@@ -293,9 +339,25 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .rrow-name em{font-style:normal; color:var(--ink-3); font-size:12px; margin-left:7px}
 .rrow-time{font-family:"Geist Mono",monospace; font-size:12.5px; color:var(--ink-2); white-space:nowrap}
 
+/* ─── когда лучше ───────────────────────────────────────── */
+.timing{margin-top:20px; padding-top:18px; border-top:1px solid var(--line-soft)}
+.timing-title{font-size:15px; font-weight:500; letter-spacing:-.02em; margin-bottom:8px}
+.timing-text{font-size:14.5px; line-height:1.55; color:var(--ink-2); max-width:660px; text-wrap:pretty}
+
 /* ─── подвал ────────────────────────────────────────────── */
-.foot{padding:4px 0 44px; max-width:720px}
-.foot-warn{font-size:12.5px; line-height:1.55; color:var(--ink-3); text-wrap:pretty}
+.foot{padding:10px var(--pad) 44px; max-width:1080px; margin:0 auto; width:100%}
+.foot-warn{
+  font-size:12.5px; line-height:1.55; color:var(--ink-3); text-wrap:pretty;
+}
+/* в свёрнутом виде от предупреждения остаётся одна строка — остальное под кнопкой More */
+.foot-warn-rest{display:none}
+.foot-warn.is-open .foot-warn-rest{display:inline}
+.foot-warn-lead{color:var(--ink-2)}
+.foot-more{
+  font-size:12px; color:var(--ink-2); padding:1px 7px; margin-left:6px; border-radius:100px;
+  background:rgba(14,14,16,.06); transition:.16s var(--ease); white-space:nowrap;
+}
+.foot-more:hover{background:rgba(14,14,16,.1); color:var(--ink)}
 .foot-meta{font-size:12.5px; color:var(--ink-3); margin-top:12px}
 .foot-meta a{color:var(--ink-2)}
 
@@ -327,15 +389,9 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .detail-sec{margin-bottom:12px}
 .detail-sec h4{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); font-weight:400; margin:0 0 4px}
 .detail-sec p{font-size:13.5px; line-height:1.5; color:var(--ink-2); text-wrap:pretty}
-.detail-fav{
-  display:inline-flex; align-items:center; gap:7px; width:100%; justify-content:center;
-  padding:11px; border-radius:12px; background:var(--surface-2); color:var(--ink-2);
-  font-size:13.5px; margin-bottom:13px; transition:.16s var(--ease);
-}
-.detail-fav:hover{background:#F0F0EB; color:var(--ink)}
-.detail-fav[aria-pressed="true"]{background:var(--ink); color:#fff}
 .detail-base{font-size:12.5px; line-height:1.45; color:var(--ink-3); padding-top:11px; border-top:1px solid var(--line-soft)}
 .detail-base b{color:var(--ink-2); font-weight:500}
+body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
 .scrim{position:fixed; inset:0; z-index:45; background:rgba(14,14,16,.28); animation:fade .2s}
 .scrim[hidden]{display:none}
 
@@ -348,40 +404,75 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 /* ─── мобильный ─────────────────────────────────────────── */
 @media (max-width:720px){
   :root{--pad:16px; --topbar-h:56px}
-  .cat{padding:5px 10px; font-size:13px}
-  .cats{gap:5px}
-  .chip{padding:7px 12px; font-size:13.5px}
-  .chips{gap:5px; padding-bottom:10px}
-  .chip-sub{padding:0 1px 0 6px}
+  .burger{display:inline-flex}
+  .sect-chip{max-width:none; flex:1 1 auto; justify-content:flex-start; min-width:0}
+  .topbar{gap:8px}
+
+  /* Вся навигация уезжает в панель под бургером. */
+  .picker{
+    position:fixed; top:0; right:0; bottom:0; z-index:44; width:min(370px,88vw); max-width:none;
+    display:block; margin:0; padding:14px var(--pad) calc(24px + env(safe-area-inset-bottom));
+    background:var(--surface); overflow-y:auto; overscroll-behavior:contain;
+    box-shadow:-12px 0 40px -18px rgba(16,16,20,.5);
+    transform:translateX(102%); transition:transform .28s var(--ease); visibility:hidden;
+  }
+  .picker.is-open{transform:none; visibility:visible}
+  .nav-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+  .nav-title{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+  .nav-close{
+    width:34px; height:34px; border-radius:50%; background:var(--surface-2);
+    color:var(--ink-2); font-size:13px; display:grid; place-items:center;
+  }
+  .nav-profile{display:flex; width:100%; justify-content:space-between; margin:0 0 16px; padding:11px 14px; border-radius:13px}
+  .cats,.chips{display:flex; flex-wrap:wrap; padding:0}
+  .cats{gap:5px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--line-soft)}
+  .cat{padding:6px 11px; font-size:13.5px}
+  .chips{gap:6px}
+  .chip{padding:8px 13px; font-size:14px}
+  .chip-sub{flex:1 0 100%; padding:8px 0 2px}
+  .nav-hint{
+    display:block; position:sticky; bottom:0; margin-top:18px; padding:14px;
+    border-radius:14px; background:var(--ink); color:#fff;
+  }
+  .nav-hint[hidden]{display:none}
+  .nav-hint-text{font-size:13px; line-height:1.45; text-wrap:pretty}
+  .nav-hint-ok{margin-top:10px; padding:8px 16px; border-radius:100px; background:#fff; color:var(--ink); font-size:13px; font-weight:500}
+
   .stats{grid-template-columns:1fr; gap:6px}
   .stat{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:12px 14px}
   .stat-label{margin:0; flex:none}
   .stat-value{font-size:16px; text-align:right}
   .stat-sub{display:inline; margin:0 0 0 6px; font-size:11.5px}
   .stat > div{text-align:right; min-width:0}
+  .hero{padding-top:18px}
   .timeline{padding:15px 13px 12px; border-radius:17px}
   .chart{height:214px}
   .hgrid{grid-template-columns:1fr}
   .hcard{padding:11px 13px; gap:10px}
   .hbar{width:80px}
+  .hcard--dual .hbar{width:74px}
   .recovery{padding:20px 16px}
-  .hfilter{margin-bottom:12px; flex-direction:column; align-items:stretch; gap:8px}
-  .seg{display:grid; grid-template-columns:auto auto auto; justify-content:stretch}
+  .hfilter{margin-bottom:12px}
+  .seg{display:grid; grid-template-columns:1fr 1fr; justify-content:stretch; width:100%}
   .seg-btn{padding:7px 6px; font-size:12.5px; justify-content:center; gap:4px; min-width:0}
   .seg-btn > span:not(.seg-count){min-width:0; overflow:hidden; text-overflow:ellipsis}
   .seg-count{font-size:10.5px; padding:1px 4px}
-  .seg-edit{align-self:flex-end; padding:0 2px}
   .reset span{display:none}
   .time-caption{display:none}
-  .reset{padding:7px; width:30px; justify-content:center}
-  .fav-actions{grid-template-columns:1fr 1fr}
+  .reset{padding:7px; width:32px; justify-content:center}
+  .chart-tip{white-space:normal; max-width:min(78vw,260px)}
   .detail{
     left:0 !important; right:0; bottom:0; top:auto !important; width:100%;
     border-radius:22px 22px 0 0; padding:20px 18px calc(22px + env(safe-area-inset-bottom));
     max-height:82vh; animation:sheet .3s var(--ease);
   }
-  .detail-close{display:grid}
+  /* крестик в шите вдвое крупнее: по нему целятся пальцем */
+  .detail-close{display:grid; top:14px; right:14px; width:60px; height:60px; font-size:26px; font-weight:300}
+  .detail-head{padding-right:58px}
   @keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
+}
+@media (max-width:560px){
+  .wordmark-text{display:none}
 }
 @media (hover:none){
   .hcard:hover{transform:none}
