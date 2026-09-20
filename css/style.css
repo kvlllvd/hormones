@@ -734,7 +734,7 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .seg-count{font-size:10.5px; padding:1px 4px}
   .reset span{display:none}
   .time-caption{display:none}
-  .reset{padding:7px; width:32px; justify-content:center}
+  .reset{padding:7px; width:32px; height:32px; justify-content:center}   /* знак вырос до 16px — без высоты кружок становится овалом */
   .chart-tip{white-space:normal; max-width:min(78vw,260px)}
   .foot-row{flex-direction:column; align-items:flex-start; gap:12px}
   .detail{
