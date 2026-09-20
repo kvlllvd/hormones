@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=18';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=18';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=18';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=19';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=19';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=19';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=18';
+} from './engine.js?v=19';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -19,7 +19,7 @@ let neverConfigured = true;
 const state = {
   sex: null, age: null, cat: 'bond', sit: 'love',
   t: 0, horizon: 1, sc: null, scByS: {}, sexes: [], sexesOn: new Set(),
-  active: null, pinned: null, playing: false, raf: 0,
+  active: null, pinned: null, detailId: null, playing: false, raf: 0,
   view: 'active', hideTimer: 0, tipPinned: false, navOpen: false,
 };
 
@@ -403,7 +403,7 @@ function hormoneCard(h) {
     b.addEventListener('mouseleave', () => { if (!state.pinned && !isSheet()) scheduleHide(); });
   }
   b.addEventListener('click', () => {
-    if (state.pinned === h.id) { state.pinned = null; setActive(null); hideDetail(); }
+    if (state.pinned === h.id) { state.pinned = null; setActive(null); hideDetail(); syncPin(); }
     else { state.pinned = h.id; setActive(h.id); showDetail(h.id, b); }
   });
   return b;
@@ -695,6 +695,8 @@ function hideTip() { $('chartTip').hidden = true; state.tipPinned = false; }
 
 function showDetail(id, anchor) {
   const h = HORMONE_BY_ID[id];
+  state.detailId = id;
+  syncPin();
   const base = baseline(state.sex, state.age, id);
   const sexTitle = SEXES.find(s => s.id === state.sex).title.toLowerCase();
   const ageTitle = AGES.find(a => a.id === state.age).title;
@@ -785,6 +787,23 @@ function closeDetail() {
   state.pinned = null;
   setActive(null);
   hideDetail();
+  syncPin();
+}
+
+/* Кнопка «закрепить» делает ровно то же, что повторный клик по плашке гормона:
+   закреплённое окно не закрывается, когда курсор уходит в сторону. */
+function syncPin() {
+  const on = state.pinned && state.pinned === state.detailId;
+  const btn = $('detailPin');
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.setAttribute('aria-label', on ? 'Открепить окно' : 'Закрепить окно');
+  btn.title = on ? 'Открепить окно' : 'Закрепить окно';
+}
+function togglePin() {
+  if (!state.detailId || $('detail').hidden) return;
+  if (state.pinned === state.detailId) { state.pinned = null; setActive(null); hideDetail(); }
+  else { state.pinned = state.detailId; setActive(state.detailId); }
+  syncPin();
 }
 
 const toTop = () =>
@@ -808,6 +827,7 @@ function bind() {
   $('playBtn').onclick = () => (state.playing ? stopPlay() : startPlay());
   $('scrub').oninput = (e) => { stopPlay(); updateTime(invLog(e.target.value / 1000, state.horizon)); };
   $('detailClose').onclick = closeDetail;
+  $('detailPin').onclick = togglePin;
   $('scrim').onclick = closeDetail;
   $('tipClose').onclick = (e) => { e.stopPropagation(); hideTip(); };
 

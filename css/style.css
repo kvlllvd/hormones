@@ -87,16 +87,14 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   position:sticky; top:0; z-index:40; display:flex; align-items:center;
   gap:10px; height:var(--topbar-h); padding:0 var(--pad); max-width:1080px; margin:0 auto;
 }
-/* Размытие живёт в отдельном слое и гасится маской к низу: иначе у шапки
-   виден чёткий край, где фильтр обрывается. Слой чуть выше самой шапки —
-   хвост градиента уходит в прозрачность уже за её границей. */
+/* Размытие живёт в отдельном слое ровно по габаритам шапки: ни пикселя ниже её
+   границы. Хвоста с затуханием нет — он давал размытую полосу под шапкой.
+   Край не бросается в глаза за счёт почти непрозрачного фона и белой отбивки. */
 .topbar::before{
-  content:""; position:absolute; z-index:-1; top:0; left:50%; margin-left:-50vw;
-  width:100vw; height:calc(100% + 20px); pointer-events:none;
-  background:rgba(244,244,241,.92);
+  content:""; position:absolute; z-index:-1; inset:0; left:50%; margin-left:-50vw;
+  width:100vw; pointer-events:none;
+  background:rgba(244,244,241,.94);
   backdrop-filter:blur(24px) saturate(1.6); -webkit-backdrop-filter:blur(24px) saturate(1.6);
-  -webkit-mask-image:linear-gradient(#000 calc(100% - 20px), rgba(0,0,0,0));
-  mask-image:linear-gradient(#000 calc(100% - 20px), rgba(0,0,0,0));
 }
 .wordmark{
   display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:600;
@@ -436,14 +434,20 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   background:transparent; border-radius:100px; transition:background-color .3s var(--ease);
 }
 .detail.is-scrolling::-webkit-scrollbar-thumb{background:rgba(14,14,16,.22)}
-.detail-close[hidden]{display:none}
-.detail-close{
-  position:absolute; top:12px; right:12px; width:30px; height:30px; border-radius:50%;
-  color:var(--ink-3); font-size:12px; display:grid; place-items:center; z-index:2;
-  background:var(--surface); transition:.15s var(--ease);
+/* Одна круглая кнопка на всё: крестик в меню, крестик и «закрепить» в окне гормона.
+   Кружок 34px, тап-зона расширена невидимым полем — палец попадает и на телефоне. */
+.iconbtn{
+  position:relative; width:34px; height:34px; flex:none; border-radius:50%;
+  background:var(--surface-2); color:var(--ink-2); font-size:13px;
+  display:grid; place-items:center; transition:.15s var(--ease);
 }
-.detail-close:hover{background:var(--surface-2); color:var(--ink)}
-.detail-head{margin-bottom:12px; padding-right:24px}
+.iconbtn::after{content:""; position:absolute; inset:-6px; border-radius:50%}
+.iconbtn:hover{background:#EBEBE5; color:var(--ink)}
+.iconbtn[aria-pressed="true"]{background:var(--ink); color:#fff}
+
+.detail-tools{position:absolute; top:12px; right:12px; z-index:2; display:flex; gap:6px}
+.detail-close[hidden]{display:none}
+.detail-head{margin-bottom:12px; padding-right:82px}
 .detail-name{font-size:21px; letter-spacing:-.03em}
 .detail-latin{font-size:12px; color:var(--ink-3); font-family:"Geist Mono",monospace; margin-top:2px}
 .detail-now{
@@ -492,10 +496,6 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .nav-profile{order:4}
   .nav-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
   .nav-title{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
-  .nav-close{
-    width:34px; height:34px; border-radius:50%; background:var(--surface-2);
-    color:var(--ink-2); font-size:13px; display:grid; place-items:center;
-  }
   /* пол и возраст трогают редко — они уходят в самый низ панели */
   .nav-profile{display:flex; width:100%; justify-content:space-between; margin:auto 0 0; padding:12px 14px; border-radius:13px; flex:none}
   .cats,.chips{display:flex; flex-wrap:wrap; padding:0}
@@ -569,8 +569,8 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   /* крестик в шите вдвое крупнее: по нему целятся пальцем */
   .time-head{flex-wrap:wrap}
   .dose{order:5; max-width:100%; margin-top:2px}
-  .detail-close{display:grid; top:14px; right:14px; width:60px; height:60px; font-size:26px; font-weight:300}
-  .detail-head{padding-right:58px}
+  .detail-tools{top:14px; right:14px}
+  .detail-close{display:grid}
   @keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
 }
 @media (hover:none){
