@@ -92,11 +92,11 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
    хвост градиента уходит в прозрачность уже за её границей. */
 .topbar::before{
   content:""; position:absolute; z-index:-1; top:0; left:50%; margin-left:-50vw;
-  width:100vw; height:calc(100% + 18px); pointer-events:none;
-  background:linear-gradient(rgba(244,244,241,.86) 55%, rgba(244,244,241,0));
-  backdrop-filter:blur(20px) saturate(1.6); -webkit-backdrop-filter:blur(20px) saturate(1.6);
-  -webkit-mask-image:linear-gradient(#000 55%, rgba(0,0,0,0));
-  mask-image:linear-gradient(#000 55%, rgba(0,0,0,0));
+  width:100vw; height:calc(100% + 20px); pointer-events:none;
+  background:rgba(244,244,241,.92);
+  backdrop-filter:blur(24px) saturate(1.6); -webkit-backdrop-filter:blur(24px) saturate(1.6);
+  -webkit-mask-image:linear-gradient(#000 calc(100% - 20px), rgba(0,0,0,0));
+  mask-image:linear-gradient(#000 calc(100% - 20px), rgba(0,0,0,0));
 }
 .wordmark{
   display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:600;
@@ -473,9 +473,10 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   :root{--pad:16px; --topbar-h:56px}
   .burger{display:inline-flex}
   .topbar{gap:8px}
-  .sect-chip{flex:0 1 auto; min-width:0; margin-left:0; max-width:calc(100% - 96px)}
-  /* На узком экране имени и чипа одновременно не бывает: чип занимает его место. */
-  .topbar.is-scrolled .wordmark-text{display:none}
+  /* Логотип остаётся на месте, а чип занимает место бургера: при скролле
+     в шапке всё равно две кнопки, просто вторая теперь называет раздел. */
+  .sect-chip{flex:0 1 auto; min-width:0; margin-left:auto; max-width:calc(100% - 150px)}
+  .topbar.is-scrolled .burger{display:none}
 
   /* Вся навигация уезжает в панель под бургером. */
   .picker{

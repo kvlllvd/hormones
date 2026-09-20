@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=16';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=16';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=16';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=18';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=18';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=18';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=16';
+} from './engine.js?v=18';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -787,6 +787,9 @@ function closeDetail() {
   hideDetail();
 }
 
+const toTop = () =>
+  scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' });
+
 /* ─── события ───────────────────────────────────────────── */
 
 function bind() {
@@ -797,8 +800,10 @@ function bind() {
   $('navHintOk').onclick = hideMenuHint;
   $('sectChip').onclick = () => {
     if (isSheet()) { state.navOpen ? closeNav() : openNav(); return; }
-    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' });
+    toTop();
   };
+  /* Логотип никуда не уводит — страница одна. Вместо перезагрузки поднимаем наверх. */
+  document.querySelector('.wordmark').onclick = (e) => { e.preventDefault(); toTop(); };
 
   $('playBtn').onclick = () => (state.playing ? stopPlay() : startPlay());
   $('scrub').oninput = (e) => { stopPlay(); updateTime(invLog(e.target.value / 1000, state.horizon)); };
