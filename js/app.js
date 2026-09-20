@@ -139,12 +139,16 @@ function hideMenuHint() {
    под неё: пока заголовок виден, чип дублировал бы его. */
 /* Кнопка нужна, только если текст действительно не влез в три строки:
    на широком экране обрезки нет вовсе, и кнопка сама остаётся скрытой. */
-function syncBlurb() {
-  const p = $('sitBlurb'), btn = $('blurbMore');
-  $('blurbWrap').classList.remove('is-open');
+function syncBlurb() { collapse($('sitBlurb'), $('blurbMore'), $('blurbWrap')); }
+function syncTiming() { collapse($('timingText'), $('timingMore'), $('timing')); }
+
+/* Сворачиваем текст и решаем, нужна ли кнопка: если он и так влез, она лишняя.
+   На широком экране обрезки нет вовсе, и кнопка сама остаётся скрытой. */
+function collapse(text, btn, host) {
+  host.classList.remove('is-open');
   btn.setAttribute('aria-expanded', 'false');
   btn.textContent = 'More';
-  btn.hidden = p.scrollHeight <= p.clientHeight + 1;
+  btn.hidden = text.scrollHeight <= text.clientHeight + 1;
 }
 
 function syncChip() {
@@ -317,9 +321,7 @@ function renderStats(sit) {
 function renderRecovery(sit) {
   $('recoveryText').textContent = sit.recovery;
   $('timingText').textContent = TIMING[sit.id] || '';
-  $('timing').classList.remove('is-open');
-  $('timingMore').setAttribute('aria-expanded', 'false');
-  $('timingMore').textContent = 'More';
+  syncTiming();
   const rows = [...state.sc.effects].sort((a, b) => b.tEnd - a.tEnd).slice(0, 6);
   $('recoveryList').innerHTML = rows.map(e => {
     const h = HORMONE_BY_ID[e.id];
@@ -870,7 +872,7 @@ function bind() {
     rt = setTimeout(() => {
       if (!isSheet() && state.navOpen) closeNav();
       placeProfile();
-      syncBlurb();
+      syncBlurb(); syncTiming();
       syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
@@ -895,7 +897,7 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1]
 
 bind();
 placeProfile();
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncBlurb(); syncChip(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncBlurb(); syncTiming(); syncChip(); });
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();

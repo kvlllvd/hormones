@@ -355,23 +355,34 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 
 /* ─── лучшее время ──────────────────────────────────────── */
 /* Плашка сразу под показателями: заголовок, две строки и More.
-   Полный текст разворачивается по кнопке — он длинный и не всегда нужен. */
+   Кнопка стоит на второй строке, а не под ней — плашка так на строку ниже. */
 .timing{
-  margin:8px 0 0; padding:16px 18px 15px; border-radius:var(--radius-s);
+  position:relative; margin:8px 0 0; padding:16px 18px 15px; border-radius:var(--radius-s);
   background:var(--surface); box-shadow:0 1px 2px rgba(16,16,20,.04);
+  --timing-fs:14.5px; --timing-pad:18px; --timing-bot:15px;
 }
 .timing-title{font-size:16px; font-weight:500; letter-spacing:-.025em; margin-bottom:7px}
 .timing-text{
-  font-size:14.5px; line-height:1.55; color:var(--ink-2); max-width:880px; text-wrap:pretty;
+  font-size:var(--timing-fs); line-height:1.55; color:var(--ink-2); max-width:880px; text-wrap:pretty;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
 .timing.is-open .timing-text{display:block; overflow:visible}
 .timing-more{
-  display:inline-block; margin-top:10px; font-size:12.5px; color:var(--ink-2);
-  padding:4px 12px; border-radius:100px; background:rgba(14,14,16,.06);
+  position:absolute; right:var(--timing-pad); bottom:var(--timing-bot);
+  display:inline-flex; align-items:center; height:calc(var(--timing-fs) * 1.55);
+  padding:0 11px; border-radius:100px; font-size:12.5px; color:var(--ink-2);
+  /* полупрозрачная заливка поверх непрозрачного фона карточки */
+  background:linear-gradient(rgba(14,14,16,.06),rgba(14,14,16,.06)), var(--surface);
   transition:.16s var(--ease);
 }
-.timing-more:hover{background:rgba(14,14,16,.1); color:var(--ink)}
+.timing-more[hidden]{display:none}
+.timing-more::before{
+  content:""; position:absolute; right:100%; top:0; bottom:0; width:32px; pointer-events:none;
+  background:linear-gradient(90deg,rgba(255,255,255,0),var(--surface));
+}
+.timing.is-open .timing-more{position:static; height:auto; margin-top:10px; padding:4px 12px}
+.timing.is-open .timing-more::before{display:none}
+.timing-more:hover{background:linear-gradient(rgba(14,14,16,.1),rgba(14,14,16,.1)), var(--surface); color:var(--ink)}
 
 /* ─── подвал ────────────────────────────────────────────── */
 .foot{padding:10px var(--pad) 44px; max-width:1080px; margin:0 auto; width:100%}
@@ -479,10 +490,11 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .stat-value{font-size:15px}
   .stat-sub{font-size:10px; line-height:1.25; margin-top:3px}
 
-  .timing{margin:6px 0 0; padding:15px 15px 14px}
+  .timing{margin:6px 0 0; padding:15px 15px 14px; --timing-fs:13.5px; --timing-pad:15px; --timing-bot:14px}
   .timing-title{font-size:15px; margin-bottom:6px}
-  .timing-text{font-size:13.5px; line-height:1.5}
-  .timing-more{margin-top:9px; font-size:12px; padding:3px 11px}
+  .timing-text{line-height:1.5}
+  .timing-more{height:calc(var(--timing-fs) * 1.5); font-size:12px}
+  .timing.is-open .timing-more{margin-top:9px; padding:3px 11px}
   .hero{padding-top:18px}
   /* Описание сценария показываем тремя строками, остальное — под More.
      Кнопка занимает ровно высоту третьей строки и стоит с ней на одном уровне;
