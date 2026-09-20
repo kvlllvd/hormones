@@ -489,7 +489,7 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   /* Логотип остаётся на месте, а чип занимает место бургера: при скролле
      в шапке всё равно две кнопки, просто вторая теперь называет раздел. */
   .sect-chip{flex:0 1 auto; min-width:0; margin-left:auto; max-width:calc(100% - 150px)}
-  .topbar.is-scrolled .burger{display:none}
+
 
   /* Вся навигация уезжает в панель под бургером. */
   .picker{
@@ -575,11 +575,29 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
     border-radius:22px 22px 0 0; padding:20px 18px calc(22px + env(safe-area-inset-bottom));
     max-height:82vh; animation:sheet .3s var(--ease);
   }
-  /* крестик в шите вдвое крупнее: по нему целятся пальцем */
+  /* На телефоне у кнопок-кружков нет фона: в него всё равно целятся пальцем,
+     а сам знак вдвое крупнее — так он читается без подложки. */
+  .iconbtn,.ob-close{background:none; width:44px; height:44px; font-size:26px; font-weight:300}
+  .iconbtn:hover{background:none}
+  /* Пин в шите не нужен: лист и так держится, пока его не закроют. */
+  .detail-pin{display:none}
+  /* Бургер и чип занимают один и тот же угол и перетекают друг в друга:
+     бургер уходит через прозрачность и лёгкое сжатие, чип приходит навстречу.
+     Поэтому бургер вынут из потока — иначе чипу не хватало бы ширины. */
+  .burger{
+    position:absolute; right:var(--pad); top:50%; margin:0;
+    background:none; box-shadow:none; transform:translateY(-50%);
+    transition:opacity .24s var(--ease), transform .24s var(--ease);
+  }
+  .burger:hover{background:none}
+  .topbar.is-scrolled .burger{opacity:0; transform:translateY(-50%) scale(.8); pointer-events:none}
+  .sect-chip{transform:translateY(-2px) scale(.94); transform-origin:right center;
+    transition:opacity .24s var(--ease), transform .24s var(--ease)}
   .time-head{flex-wrap:wrap}
   .dose{order:5; max-width:100%; margin-top:2px}
-  .detail-tools{top:14px; right:14px}
+  .detail-tools{top:10px; right:10px}
   .detail-close{display:grid}
+  .detail-head{padding-right:46px}
   @keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
 }
 @media (hover:none){
