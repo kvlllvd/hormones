@@ -89,6 +89,16 @@ function applyProfile() {
   $('navProfileText').textContent = label;
 }
 
+/* «Лучшее время» на телефоне поднимается плашкой под показатели, свёрнутое
+   до двух строк; на широком экране остаётся в карточке возврата к норме. */
+function placeTiming() {
+  const el = $('timing');
+  const mob = isSheet();
+  if (mob) { if (el.previousElementSibling !== $('stats')) $('stats').after(el); }
+  else if (el.parentElement !== $('recovery')) $('recovery').appendChild(el);
+  $('timingTitle').textContent = mob ? 'Лучшее время' : 'Лучшее время для гормонального фона';
+}
+
 /* Пол и возраст трогают редко: на широком экране кнопка стоит в подвале
    рядом со служебной строкой, на узком — в самом низу меню. */
 function placeProfile() {
@@ -310,6 +320,9 @@ function renderStats(sit) {
 function renderRecovery(sit) {
   $('recoveryText').textContent = sit.recovery;
   $('timingText').textContent = TIMING[sit.id] || '';
+  $('timing').classList.remove('is-open');
+  $('timingMore').setAttribute('aria-expanded', 'false');
+  $('timingMore').textContent = 'More';
   const rows = [...state.sc.effects].sort((a, b) => b.tEnd - a.tEnd).slice(0, 6);
   $('recoveryList').innerHTML = rows.map(e => {
     const h = HORMONE_BY_ID[e.id];
@@ -797,6 +810,13 @@ function bind() {
     if (b) toggleSex(b.dataset.sex);
   });
 
+  const tmore = $('timingMore');
+  tmore.onclick = () => {
+    const open = $('timing').classList.toggle('is-open');
+    tmore.setAttribute('aria-expanded', open);
+    tmore.textContent = open ? 'Less' : 'More';
+  };
+
   const more = $('footMore');
   more.onclick = () => {
     const open = $('footWarn').classList.toggle('is-open');
@@ -845,7 +865,7 @@ function bind() {
     clearTimeout(rt);
     rt = setTimeout(() => {
       if (!isSheet() && state.navOpen) closeNav();
-      placeProfile();
+      placeProfile(); placeTiming();
       syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
@@ -869,7 +889,7 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1]
 }
 
 bind();
-placeProfile();
+placeProfile(); placeTiming();
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
