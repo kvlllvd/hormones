@@ -145,7 +145,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .chips{display:flex; flex-wrap:wrap; gap:5px; padding:6px 0 0}
 .cat{
   flex:none; display:inline-flex; align-items:center; gap:4px;
-  padding:3px 0; font-size:13px; font-weight:500; letter-spacing:-.01em;
+  padding:3px 0; font-size:13px; font-weight:400; letter-spacing:-.01em;
   color:var(--ink-3); transition:.18s var(--ease); white-space:nowrap;
 }
 /* Точка есть всегда, у невыбранных она прозрачная: иначе ряд дёргался бы
@@ -156,7 +156,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 }
 .cat[aria-selected="true"]::before{visibility:visible}
 .cat:hover{color:var(--ink-2)}
-.cat[aria-selected="true"]{color:var(--ink)}
+.cat[aria-selected="true"]{color:var(--ink); font-weight:600}
 /* Подпись подраздела идёт в потоке вместе с чипами, а не отдельной строкой:
    так ряды заполняются целиком и не остаётся пустого места справа. */
 .chip-sub{
@@ -545,9 +545,9 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .profile-pop{width:auto; left:0; right:0; bottom:calc(100% + 8px)}
   .profile-opt{padding:11px 6px; font-size:14px}
   .cats,.chips{display:flex; flex-wrap:wrap; padding:0}
-  .cats{gap:4px 18px; margin-bottom:14px; padding:0 0 14px; border-bottom:1px solid var(--line-soft)}
+  .cats{gap:4px 18px; margin-bottom:34px; padding:0 0 34px; border-bottom:1px solid var(--line-soft)}
   .chips{gap:5px; padding:0 0 6px}
-  .cat{padding:3px 0; font-size:16px}
+  .cat{padding:3px 0; font-size:13px}
   .chip{padding:6px 11px; font-size:13px}
   .chip-sub{flex:1 0 100%; padding:9px 0 3px}
   .nav-hint{
