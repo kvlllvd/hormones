@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Гормональная карта — что происходит с телом в разных ситуациях</title>
-<meta name="description" content="Интерактивная карта гормональной системы: 21 гормон, 37 жизненных сценариев. Видно, что поднимается, что падает и сколько времени нужно системе, чтобы вернуться к норме.">
+<meta name="description" content="Интерактивная карта гормональной системы: 21 гормон, 38 жизненных сценариев. Видно, что поднимается, что падает и сколько времени нужно системе, чтобы вернуться к норме.">
 <meta name="theme-color" content="#F5F5F3">
 <meta property="og:title" content="Гормональная карта">
-<meta property="og:description" content="21 гормон, 37 сценариев: секс, расставание, недосып, алкоголь, тренировки, велозаезды, плавание. Что меняется и когда вернётся к норме.">
+<meta property="og:description" content="21 гормон, 38 сценариев: секс, расставание, недосып, алкоголь, тренировки, велозаезды, плавание. Что меняется и когда вернётся к норме.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
 </head>
 <body>
@@ -88,14 +88,13 @@
     </div>
 
     <input class="scrub" id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Время после события">
-    <p class="chart-note" id="chartNote"></p>
   </section>
 
   <section class="hfilter">
     <div class="seg" role="tablist" aria-label="Что показывать">
-      <button class="seg-btn" id="segActive" role="tab" aria-selected="true">Задействованные <span class="seg-count" id="cntActive">0</span></button>
-      <button class="seg-btn" id="segFav" role="tab" aria-selected="false">Избранные <span class="seg-count" id="favCount">0</span></button>
       <button class="seg-btn" id="segAll" role="tab" aria-selected="false">Все <span class="seg-count" id="cntAll">21</span></button>
+      <button class="seg-btn" id="segActive" role="tab" aria-selected="true">Задействованные</button>
+      <button class="seg-btn" id="segFav" role="tab" aria-selected="false">Избранные <span class="seg-count" id="favCount">0</span></button>
     </div>
     <button class="seg-edit" id="favEdit">Настроить</button>
   </section>
@@ -110,7 +109,7 @@
 
   <footer class="foot">
     <p class="foot-warn">Это справочная модель, а не диагностика. Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы.</p>
-    <p class="foot-meta">21 гормон · 37 сценариев · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
+    <p class="foot-meta">21 гормон · 38 сценариев · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
   </footer>
 </main>
 
@@ -134,6 +133,6 @@
 </div>
 <div class="scrim" id="scrim" hidden></div>
 
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/app.js?v=5"></script>
 </body>
 </html>

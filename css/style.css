@@ -195,7 +195,6 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 }
 .scrub:active::-webkit-slider-thumb{transform:scale(1.12)}
 .scrub:focus-visible::-webkit-slider-thumb{border-color:var(--ink)}
-.chart-note{font-size:12px; color:var(--ink-3); margin-top:6px; line-height:1.4; text-wrap:pretty}
 
 /* ─── фильтр списка ─────────────────────────────────────── */
 .hfilter{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 14px}

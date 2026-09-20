@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES } from './situations.js';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=5';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES } from './situations.js?v=5';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=5';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js';
+} from './engine.js?v=5';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -39,7 +39,6 @@ function toggleFav(id) {
 }
 function syncFavUI() {
   $('favCount').textContent = state.fav.size;
-  $('cntActive').textContent = state.scenario ? state.scenario.effects.length : 0;
   $('cntAll').textContent = HORMONES.length;
   if (state.view === 'fav' && state.fav.size === 0) state.view = 'active';
   $('segActive').setAttribute('aria-selected', state.view === 'active');
@@ -327,13 +326,6 @@ function setActive(id) {
   state.active = id;
   document.querySelectorAll('.hcard').forEach(c => c.classList.toggle('is-active', c.dataset.h === id));
   drawChart();
-  const sc = state.scenario;
-  const lead = id && sc.byId[id] ? id : sc.effects[0].id;
-  const name = HORMONE_BY_ID[lead].name.toLowerCase();
-  const legend = 'Светлая зона слева — пока идёт само событие, засечки сверху — его этапы.';
-  $('chartNote').textContent = (id && sc.byId[id])
-    ? `Выделен ${name}. Серые линии — остальные затронутые гормоны. ${legend}`
-    : `Каждая линия — гормон, выделен ${name}: он отклоняется сильнее всех. ${legend} Тяните по графику, чтобы отмотать время.`;
 }
 
 /* ─── график ────────────────────────────────────────────── */
