@@ -158,11 +158,16 @@ async function suiteBehaviour(p) {
   const note = [];
   const check = (cond, msg) => { if (!cond) bad.push('✗ ' + msg); };
 
+  /* Переход на тот же адрес Chrome делает внутри документа: скрипты заново
+     не выполняются, и подготовленный localStorage «не действует». Поэтому
+     второй заход всегда с новым параметром — иначе он ничего не перечитает. */
+  let visit = 0;
+  const again = (url) => url.replace('#', `${url.includes('?') ? '&' : '?'}v=${++visit}#`);
   const fresh = async (w, h, mob, url = BASE + '?p=m-a26#love') => {
     await p.viewport(w, h, mob);
     await p.goto(url);
     await p.eval(`(() => { try { localStorage.setItem('hormones.menuseen.v1','1'); } catch {} return 1; })()`);
-    await p.goto(url);
+    await p.goto(again(url));
   };
 
   /* ── десктоп ─────────────────────────────────────────── */
@@ -183,7 +188,10 @@ async function suiteBehaviour(p) {
       chipSize: cs(chip, 'font-size'),
       chipOnBg: cs(chipOn, 'background-color'),
       chipOffBg: cs([...document.querySelectorAll('.chip')].find(c => c.getAttribute('aria-selected') !== 'true'), 'background-color'),
-      gapChipsToSubtitle: Math.round(document.getElementById('sitTag').getBoundingClientRect().top - chips.getBoundingClientRect().bottom),
+      gapChipsToTitle: Math.round(document.getElementById('sitName').getBoundingClientRect().top - chips.getBoundingClientRect().bottom),
+      eyebrow: cs(document.getElementById('sitTag'), 'display'),
+      themeHost: document.getElementById('themeBtn').parentElement.className,
+      themeShown: cs(document.getElementById('themeBtn'), 'opacity'),
       profileHost: document.getElementById('profile').parentElement.id,
       popHidden: document.getElementById('profilePop').hidden,
       iconbtn: [...document.querySelectorAll('.iconbtn')].map(b => Math.round(b.offsetWidth)),
@@ -199,7 +207,10 @@ async function suiteBehaviour(p) {
   check(r.catWeight === '600', 'выбранный раздел не полужирный: ' + r.catWeight);
   check(r.catOffWeight === '400', 'невыбранный раздел не обычный: ' + r.catOffWeight);
   check(r.chipOnBg !== r.chipOffBg, 'выбранный чип не отличается заливкой: ' + r.chipOnBg);
-  check(r.gapChipsToSubtitle === 78, `отступ чипы→подзаголовок ${r.gapChipsToSubtitle}px вместо 78`);
+  check(r.gapChipsToTitle === 86, `отступ чипы→заголовок ${r.gapChipsToTitle}px вместо 86`);
+  check(r.eyebrow === 'none', 'десктоп: раздел над заголовком дублирует навигацию (display ' + r.eyebrow + ')');
+  check(/topbar/.test(r.themeHost), 'десктоп: знак темы не в шапке, а в ' + r.themeHost);
+  check(r.themeShown === '1', 'десктоп: знак темы не виден до скролла');
   check(r.profileHost === 'footRow', 'профиль не в подвале: ' + r.profileHost);
   check(Object.values(r.labels).every(v => v === 'Ещё'), 'подписи кнопок: ' + JSON.stringify(r.labels));
   check(!r.english, 'английские слова на странице: ' + r.english);
@@ -238,11 +249,35 @@ async function suiteBehaviour(p) {
     const bar = document.querySelector('.topbar');
     return { isTop: bar.classList.contains('is-top'), scrolled: bar.classList.contains('is-scrolled'),
       chip: getComputedStyle(document.getElementById('sectChip')).opacity,
+      theme: getComputedStyle(document.getElementById('themeBtn')).opacity,
       chipText: document.getElementById('sectChipText').textContent };
   })()`);
   check(!r.isTop, 'is-top остался после скролла');
   check(r.scrolled, 'нет is-scrolled после скролла');
   check(r.chip === '1', 'чип раздела не появился при скролле (opacity ' + r.chip + ')');
+  check(r.theme === '0', 'десктоп: знак темы не уступил угол чипу при скролле (opacity ' + r.theme + ')');
+
+  /* тема: клик по солнцу делает страницу тёмной, выбор запоминается,
+     при скролле знак уступает угол чипу раздела */
+  r = await p.eval(`(() => {
+    const de = document.documentElement, btn = document.getElementById('themeBtn');
+    const was = de.dataset.theme;
+    btn.click();
+    const dark = { theme: de.dataset.theme, pressed: btn.getAttribute('aria-pressed'),
+      saved: localStorage.getItem('hormones.theme.v1'),
+      bg: getComputedStyle(document.body).backgroundColor,
+      sun: getComputedStyle(document.querySelector('.theme-sun')).display,
+      moon: getComputedStyle(document.querySelector('.theme-moon')).display };
+    btn.click();
+    const light = { theme: de.dataset.theme, saved: localStorage.getItem('hormones.theme.v1'),
+      sun: getComputedStyle(document.querySelector('.theme-sun')).display };
+    return { was, dark, light };
+  })()`);
+  check(r.dark.theme === 'dark' && r.dark.pressed === 'true', 'клик по солнцу не включил тёмную тему: ' + JSON.stringify(r.dark));
+  check(r.dark.saved === 'dark' && r.light.saved === 'light', 'выбор темы не запомнился: ' + r.dark.saved + ' / ' + r.light.saved);
+  check(r.dark.bg !== 'rgb(244, 244, 241)', 'тёмная тема не поменяла фон страницы: ' + r.dark.bg);
+  check(r.dark.sun === 'none' && r.dark.moon !== 'none', 'в тёмной теме не появилась луна: ' + JSON.stringify([r.dark.sun, r.dark.moon]));
+  check(r.light.sun !== 'none', 'в светлой теме пропало солнце');
 
   /* окно гормона: открытие, пин, крестик, защита от пина закрытого окна */
   r = await p.eval(`(() => {
@@ -313,6 +348,9 @@ async function suiteBehaviour(p) {
       profileLabelShown: cs(document.querySelector('.nav-profile-label'), 'display'),
       gapCatsToChips: Math.round(chips.getBoundingClientRect().top - document.getElementById('cats').getBoundingClientRect().bottom),
       sepMargins: sep ? [cs(sep, 'margin-top'), cs(sep, 'margin-bottom')] : null,
+      themeHost: document.getElementById('themeBtn').parentElement.className,
+      themeBeforeClose: document.getElementById('themeBtn').nextElementSibling === document.getElementById('navClose'),
+      eyebrow: cs(document.getElementById('sitTag'), 'display'),
     };
   })()`);
   check(r.open, 'меню не открылось по бургеру');
@@ -321,6 +359,9 @@ async function suiteBehaviour(p) {
   check(r.catSize === '13px', 'разделы в меню не 13px: ' + r.catSize);
   check(r.profileHost === 'picker', 'профиль не в панели: ' + r.profileHost);
   check(r.profileLabelShown !== 'none', 'в панели скрыта подпись «Пол и возраст»');
+  check(r.themeHost === 'nav-top', 'телефон: знак темы не в шапке меню, а в ' + r.themeHost);
+  check(r.themeBeforeClose, 'телефон: знак темы стоит не рядом с крестиком');
+  check(r.eyebrow !== 'none', 'телефон: пропал раздел над заголовком');
 
   /* крестик меню ровно на оси бургера, по обеим осям */
   r = await p.eval(`(() => {

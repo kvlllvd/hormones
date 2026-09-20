@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=39';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE, SOURCES } from './situations.js?v=39';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=39';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=40';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE, SOURCES } from './situations.js?v=40';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=40';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=39';
+} from './engine.js?v=40';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -136,6 +136,44 @@ function closeProfilePop() {
 }
 function toggleProfilePop() {
   $('profilePop').hidden ? openProfilePop() : closeProfilePop();
+}
+
+/* ─── тема ──────────────────────────────────────────────── */
+
+/* Светлая по умолчанию, тёмная включается только кнопкой и запоминается
+   в браузере. Системную настройку не слушаем: выбор человека иначе спорил бы
+   с ней на каждом заходе. Цвета живут переменными в :root — javascript
+   переключает один атрибут, перерисовывать ничего не нужно, включая график. */
+const THEME = 'hormones.theme.v1';
+
+function applyTheme(dark) {
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  const btn = $('themeBtn');
+  const label = dark ? 'Светлая тема' : 'Тёмная тема';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', label);
+  btn.title = label;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = dark ? '#0F0F11' : '#F5F5F3';
+}
+function toggleTheme() {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  applyTheme(dark);
+  try { localStorage.setItem(THEME, dark ? 'dark' : 'light'); } catch {}
+}
+function loadTheme() {
+  let dark = false;
+  try { dark = localStorage.getItem(THEME) === 'dark'; } catch { /* приватный режим */ }
+  applyTheme(dark);
+}
+
+/* Знак темы стоит там же, где второй элемент управления: на широком экране —
+   в правом углу шапки, на узком — в меню рядом с крестиком, потому что угол
+   шапки там занят бургером и чипом. Приём тот же, что и с профилем. */
+function placeTheme() {
+  const btn = $('themeBtn');
+  if (isSheet()) { if (btn.nextElementSibling !== $('navClose')) $('navClose').before(btn); }
+  else if (!btn.closest('.topbar')) $('burgerBtn').before(btn);
 }
 
 /* ─── меню разделов ─────────────────────────────────────── */
@@ -496,7 +534,7 @@ function setActive(id) {
 /* ─── график ────────────────────────────────────────────── */
 
 const PAD = { l: 36, r: 10, t: 42, b: 18 };
-const SEX_COLOR = { m: '#3E8FD4', f: '#D9569B' };
+const SEX_COLOR = { m: 'var(--sex-m)', f: 'var(--sex-f)' };
 
 /* Ширина подписи на графике. Оценка «столько-то пикселей на символ» годится
    для упаковки меток (журнал: точный замер там сбивает раскладку и меток
@@ -554,7 +592,7 @@ function drawChart() {
   let spanRect = '', marks = '';
   if (ph_ && ph_.span > 0) {
     const x2 = xOf(toLog(Math.min(ph_.span, H), H));
-    spanRect = `<rect x="${PAD.l}" y="${PAD.t}" width="${(x2 - PAD.l).toFixed(1)}" height="${ph}" fill="#F1F1EC"/>`;
+    spanRect = `<rect x="${PAD.l}" y="${PAD.t}" width="${(x2 - PAD.l).toFixed(1)}" height="${ph}" fill="var(--chart-span)"/>`;
   }
   if (ph_) {
     /* Два яруса подписей: на узком экране иначе выживает одна метка из трёх. */
@@ -577,9 +615,9 @@ function drawChart() {
       if (left < lastR[row] + 7) return;
       lastR[row] = left + est;
       const y = rowY[row];
-      marks += `<line x1="${x.toFixed(1)}" y1="${(y + 4).toFixed(1)}" x2="${x.toFixed(1)}" y2="${PAD.t + ph}" stroke="#DCDCD5" stroke-width="1"/>
-        <circle cx="${x.toFixed(1)}" cy="${(y + 4).toFixed(1)}" r="1.8" fill="#C2C2BA"/>
-        <text x="${tx.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-size="9" fill="#83837B">${mk.l}</text>`;
+      marks += `<line x1="${x.toFixed(1)}" y1="${(y + 4).toFixed(1)}" x2="${x.toFixed(1)}" y2="${PAD.t + ph}" stroke="var(--chart-mark)" stroke-width="1"/>
+        <circle cx="${x.toFixed(1)}" cy="${(y + 4).toFixed(1)}" r="1.8" fill="var(--chart-mark-dot)"/>
+        <text x="${tx.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-size="9" fill="var(--chart-mark-text)">${mk.l}</text>`;
     });
   }
 
@@ -587,8 +625,8 @@ function drawChart() {
   const grid = gridVals.map(v => {
     const y = yOf(v).toFixed(1);
     const label = v === 0 ? 'норма' : (v > 0 ? '×' + Math.pow(2, v) : '×' + String(Math.pow(2, v)).replace('.', ','));
-    return `<line x1="${PAD.l}" y1="${y}" x2="${w - PAD.r}" y2="${y}" stroke="${v === 0 ? '#D2D2CB' : '#EDEDE8'}" stroke-width="1"/>
-            <text x="${PAD.l - 7}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="9.5" fill="#8A8A82" font-family="Geist Mono, monospace">${label}</text>`;
+    return `<line x1="${PAD.l}" y1="${y}" x2="${w - PAD.r}" y2="${y}" stroke="${v === 0 ? 'var(--chart-zero)' : 'var(--chart-grid)'}" stroke-width="1"/>
+            <text x="${PAD.l - 7}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="9.5" fill="var(--chart-tick)" font-family="Geist Mono, monospace">${label}</text>`;
   }).join('');
 
   const cand = TICKS.filter(t => t <= H * 0.95 && t >= H / 5000);
@@ -596,8 +634,8 @@ function drawChart() {
   /* отсчитываем от конца, чтобы правый край шкалы всегда был подписан */
   const xa = cand.filter((_, i) => (cand.length - 1 - i) % step === 0).map(t => {
     const x = xOf(toLog(t, H)).toFixed(1);
-    return `<line x1="${x}" y1="${PAD.t}" x2="${x}" y2="${PAD.t + ph}" stroke="#F2F2EE" stroke-width="1"/>
-            <text x="${x}" y="${h - 4}" text-anchor="middle" font-size="9.5" fill="#8A8A82" font-family="Geist Mono, monospace">${formatClock(t)}</text>`;
+    return `<line x1="${x}" y1="${PAD.t}" x2="${x}" y2="${PAD.t + ph}" stroke="var(--chart-vgrid)" stroke-width="1"/>
+            <text x="${x}" y="${h - 4}" text-anchor="middle" font-size="9.5" fill="var(--chart-tick)" font-family="Geist Mono, monospace">${formatClock(t)}</text>`;
   }).join('');
 
   const pxN = xOf(toLog(state.t, H));
@@ -606,7 +644,7 @@ function drawChart() {
   const activeId = state.active && movedAnywhere(state.active) ? state.active : state.sc.effects[0].id;
   const hiCurves = curves.filter(c => c.e.id === activeId);
   const base = curves.filter(c => c.e.id !== activeId).map(c => {
-    const stroke = dual ? SEX_COLOR[c.sex] : '#C9C9C1';
+    const stroke = dual ? SEX_COLOR[c.sex] : 'var(--chart-base)';
     return `<path d="${path(c.pts)}" fill="none" stroke="${stroke}" stroke-width="1.4"
       stroke-linecap="round" stroke-linejoin="round" opacity="${dual ? '.25' : '.8'}"/>`;
   }).join('');
@@ -621,7 +659,7 @@ function drawChart() {
   if (hiC) {
     const far = hiC.pts.reduce((a, b) => (Math.abs(b[1]) > Math.abs(a[1]) ? b : a));
     const up = far[1] >= 0;
-    const color = dual ? '#0E0E10' : (up ? 'var(--up)' : 'var(--down)');
+    const color = dual ? 'var(--ink)' : (up ? 'var(--up)' : 'var(--down)');
     const name = HORMONE_BY_ID[hiC.e.id].name;
     const est = textWidth(name, 11.5, 500);
     const fx = xOf(far[0]);
@@ -660,15 +698,15 @@ function drawChart() {
       stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
     topLabel = `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}"
         text-anchor="${anchor}" font-size="11.5" font-weight="500" fill="${color}"
-        stroke="#fff" stroke-width="3.5" paint-order="stroke">${name}</text>`;
+        stroke="var(--surface)" stroke-width="3.5" paint-order="stroke">${name}</text>`;
   }
 
-  const head = `<line x1="${px}" y1="${PAD.t - 4}" x2="${px}" y2="${PAD.t + ph}" stroke="#0E0E10" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`;
+  const head = `<line x1="${px}" y1="${PAD.t - 4}" x2="${px}" y2="${PAD.t + ph}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`;
   const dots = dotList.map(c => {
     const v = Math.log2(levelAt(c.e, state.t));
     const upv = v > 0.02, flat = Math.abs(v) <= 0.02;
-    const color = dual ? SEX_COLOR[c.sex] : (flat ? '#B8B8B2' : upv ? 'var(--up)' : 'var(--down)');
-    return `<circle cx="${px}" cy="${yOf(v).toFixed(1)}" r="${c === hiC || dual ? 4.5 : 3}" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+    const color = dual ? SEX_COLOR[c.sex] : (flat ? 'var(--flat)' : upv ? 'var(--up)' : 'var(--down)');
+    return `<circle cx="${px}" cy="${yOf(v).toFixed(1)}" r="${c === hiC || dual ? 4.5 : 3}" fill="${color}" stroke="var(--surface)" stroke-width="2"/>`;
   }).join('');
 
   host.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">
@@ -857,6 +895,7 @@ const toTop = () =>
 
 function bind() {
   $('navProfile').onclick = toggleProfilePop;
+  $('themeBtn').onclick = toggleTheme;
   $('burgerBtn').onclick = () => (state.navOpen ? closeNav() : openNav());
   $('navClose').onclick = closeNav;
   $('navScrim').onclick = closeNav;
@@ -960,6 +999,7 @@ function bind() {
     rt = setTimeout(() => {
       if (!isSheet() && state.navOpen) closeNav();
       placeProfile();
+      placeTheme();
       syncBlurb(); syncTiming();
       syncChip();
       drawChart();
@@ -987,6 +1027,8 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === linkAge)) {
 
 bind();
 placeProfile();
+placeTheme();
+loadTheme();
 /* Пока шрифт не приехал, замер подписей идёт по запасному — перерисовываем. */
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncBlurb(); syncTiming(); syncChip(); drawChart(); });
 if (state.sex || loadProfile()) {

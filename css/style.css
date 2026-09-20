@@ -16,6 +16,32 @@
   --sex-f:#D9569B;
   --sex-m-soft:#E1EDF9;
   --sex-f-soft:#FAE3EE;
+  --line-2:#D6D6CF;
+  /* текст и знаки на плашке цвета --ink: в тёмной теме он становится тёмным */
+  --on-ink:#FFFFFF;
+  --on-ink-fill:rgba(255,255,255,.14);
+  --surface-3:#F0F0EB;
+  /* полупрозрачная заливка служебных кнопок поверх непрозрачного фона */
+  --fill:rgba(14,14,16,.06);
+  --fill-hi:rgba(14,14,16,.10);
+  --ring:rgba(14,14,16,.12);
+  --ring-soft:rgba(14,14,16,.05);
+  --scroll-thumb:rgba(14,14,16,.22);
+  --veil:rgba(244,244,241,.82);
+  --bar-bg:rgba(244,244,241,.94);
+  --bar-line:rgba(255,255,255,.5);
+  --tip-m:#9CC8EE;
+  --tip-f:#F1A6CB;
+  /* график рисуется в SVG, поэтому его цвета тоже живут переменными */
+  --chart-span:#F1F1EC;
+  --chart-grid:#EDEDE8;
+  --chart-zero:#D2D2CB;
+  --chart-vgrid:#F2F2EE;
+  --chart-tick:#8A8A82;
+  --chart-mark:#DCDCD5;
+  --chart-mark-dot:#C2C2BA;
+  --chart-mark-text:#83837B;
+  --chart-base:#C9C9C1;
   --radius:20px;
   --radius-s:12px;
   --shadow:0 1px 2px rgba(16,16,20,.04), 0 12px 32px -18px rgba(16,16,20,.18);
@@ -23,6 +49,60 @@
   --pad:20px;
   /* высота шапки: на неё липнет .picker, менять только здесь */
   --topbar-h:62px;
+  color-scheme:light;
+}
+
+/* ─── тёмная тема ───────────────────────────────────────── */
+/* Включается только кнопкой в шапке (на телефоне — в меню) и запоминается
+   в браузере: системную настройку не слушаем, иначе выбор человека спорил бы
+   с ней на каждом заходе. Здесь переопределяются одни токены — правила ниже
+   про тему ничего не знают. */
+:root[data-theme="dark"]{
+  --bg:#0F0F11;
+  --surface:#18181A;
+  --surface-2:#1F1F22;
+  --surface-3:#26262A;
+  --ink:#F1F1EE;
+  --ink-2:#A6A6A3;
+  --ink-3:#7C7C7A;
+  --line:#2D2D31;
+  --line-soft:#242428;
+  --line-2:#3A3A3F;
+  /* Красный и синий на тёмном фоне гаснут — берём те же тона светлее. */
+  --up:#F0907A;
+  --up-soft:#38231E;
+  --down:#82B2E8;
+  --down-soft:#1B2A3B;
+  --flat:#5B5B60;
+  --sex-m:#5EA8E4;
+  --sex-f:#E87CB4;
+  --sex-m-soft:#1B2A38;
+  --sex-f-soft:#33202B;
+  --on-ink:#0F0F11;
+  --on-ink-fill:rgba(15,15,17,.14);
+  --fill:rgba(255,255,255,.07);
+  --fill-hi:rgba(255,255,255,.13);
+  --ring:rgba(241,241,238,.20);
+  --ring-soft:rgba(241,241,238,.07);
+  --scroll-thumb:rgba(241,241,238,.24);
+  --veil:rgba(15,15,17,.82);
+  --bar-bg:rgba(15,15,17,.92);
+  --bar-line:rgba(255,255,255,.05);
+  --tip-m:#2C6BA3;
+  --tip-f:#A83B76;
+  --chart-span:#1E1E21;
+  --chart-grid:#26262A;
+  --chart-zero:#3B3B40;
+  --chart-vgrid:#202024;
+  --chart-tick:#76767A;
+  --chart-mark:#38383D;
+  --chart-mark-dot:#5A5A5F;
+  --chart-mark-text:#8A8A8E;
+  --chart-base:#4A4A4F;
+  /* На тёмном фоне тень не читается — карточки держатся на разнице подложек,
+     а тень остаётся только чтобы отделить всплывающие окна. */
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.8);
+  color-scheme:dark;
 }
 
 *{box-sizing:border-box}
@@ -45,7 +125,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 /* ─── онбординг ─────────────────────────────────────────── */
 .onboarding{
   position:fixed; inset:0; z-index:60; display:grid; place-items:center;
-  padding:var(--pad); background:rgba(244,244,241,.82); backdrop-filter:blur(24px) saturate(1.4);
+  padding:var(--pad); background:var(--veil); backdrop-filter:blur(24px) saturate(1.4);
   -webkit-backdrop-filter:blur(24px) saturate(1.4);
   animation:fade .4s var(--ease);
 }
@@ -69,10 +149,10 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   border:1.5px solid transparent; font-size:15px; transition:.18s var(--ease);
   text-align:center;
 }
-.ob-opt:hover{background:#F2F2EE}
-.ob-opt[aria-checked="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.ob-opt:hover{background:var(--surface-3)}
+.ob-opt[aria-checked="true"]{background:var(--ink); color:var(--on-ink); border-color:var(--ink)}
 .ob-submit{
-  width:100%; margin-top:8px; padding:15px; border-radius:15px; background:var(--ink); color:#fff;
+  width:100%; margin-top:8px; padding:15px; border-radius:15px; background:var(--ink); color:var(--on-ink);
   font-size:16px; font-weight:500; transition:.18s var(--ease);
 }
 .ob-submit:disabled{background:var(--line); color:var(--ink-3); cursor:not-allowed}
@@ -92,7 +172,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .topbar::before{
   content:""; position:absolute; z-index:-1; inset:0; left:50%; margin-left:-50vw;
   width:100vw; pointer-events:none;
-  background:rgba(244,244,241,.94);
+  background:var(--bar-bg);
   backdrop-filter:blur(24px) saturate(1.6); -webkit-backdrop-filter:blur(24px) saturate(1.6);
 }
 .wordmark{
@@ -113,7 +193,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 
 .sect-chip{
   display:inline-flex; align-items:center; min-width:0; max-width:46%; margin-left:auto;
-  padding:6px 13px; border-radius:100px; background:var(--ink); color:#fff;
+  padding:6px 13px; border-radius:100px; background:var(--ink); color:var(--on-ink);
   font-size:13px; font-weight:500; letter-spacing:-.01em; white-space:nowrap;
   opacity:0; pointer-events:none; transform:translateY(-4px);
   transition:opacity .2s var(--ease), transform .2s var(--ease);
@@ -123,7 +203,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
    через весь экран. Отсюда 100vw и сдвиг от середины. */
 .topbar.is-scrolled::after{
   content:""; position:absolute; bottom:0; left:50%; margin-left:-50vw;
-  width:100vw; height:1px; background:rgba(255,255,255,.5);
+  width:100vw; height:1px; background:var(--bar-line);
 }
 .sect-chip span{overflow:hidden; text-overflow:ellipsis}
 
@@ -132,7 +212,25 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   align-items:center; justify-content:center; background:var(--surface);
   box-shadow:0 1px 2px rgba(16,16,20,.06); color:var(--ink); transition:.18s var(--ease);
 }
-.burger:hover{background:#fff}
+.burger:hover{background:var(--surface)}
+
+/* Солнце и луна занимают тот же угол, что и чип раздела: пока страница
+   наверху, в шапке стоит знак темы, при скролле он уступает место чипу —
+   ровно так же, как на телефоне это делает бургер. Поэтому кнопка вынута
+   из потока: иначе невидимый чип отнимал бы у неё место. */
+.topbar .theme{
+  position:absolute; right:var(--pad); top:50%; width:38px; height:38px; border-radius:12px;
+  display:grid; place-items:center; background:var(--surface); color:var(--ink);
+  box-shadow:0 1px 2px rgba(16,16,20,.06); transform:translateY(-50%);
+  transition:opacity .24s var(--ease), transform .24s var(--ease), background-color .18s var(--ease);
+}
+.topbar .theme:hover{background:var(--surface-3)}
+.topbar.is-scrolled .theme{opacity:0; transform:translateY(-50%) scale(.8); pointer-events:none}
+/* Знак показывает текущее состояние, а не будущее: в светлой теме горит
+   солнце, в тёмной — луна. */
+.theme-moon{display:none}
+:root[data-theme="dark"] .theme-sun{display:none}
+:root[data-theme="dark"] .theme-moon{display:block}
 
 /* ─── выбор ситуации ────────────────────────────────────── */
 .picker{
@@ -170,15 +268,15 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   color:var(--ink-2); border:1px solid var(--line); transition:.2s var(--ease);
   white-space:nowrap;
 }
-.chip:hover{color:var(--ink); border-color:#D6D6CF}
-.chip[aria-selected="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.chip:hover{color:var(--ink); border-color:var(--line-2)}
+.chip[aria-selected="true"]{background:var(--ink); color:var(--on-ink); border-color:var(--ink)}
 .chip.is-hint{
-  border-color:var(--ink); box-shadow:0 0 0 3px rgba(14,14,16,.12);
+  border-color:var(--ink); box-shadow:0 0 0 3px var(--ring);
   animation:hintpulse 1.6s var(--ease) infinite;
 }
 @keyframes hintpulse{
-  0%,100%{box-shadow:0 0 0 3px rgba(14,14,16,.12)}
-  50%{box-shadow:0 0 0 7px rgba(14,14,16,.05)}
+  0%,100%{box-shadow:0 0 0 3px var(--ring)}
+  50%{box-shadow:0 0 0 7px var(--ring-soft)}
 }
 .profile{position:relative}
 .nav-profile{
@@ -186,7 +284,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   background:var(--surface); border:1px solid var(--line); font-size:13px; color:var(--ink-2);
   white-space:nowrap; transition:.18s var(--ease); margin-top:4px;
 }
-.nav-profile:hover{color:var(--ink); border-color:#D6D6CF}
+.nav-profile:hover{color:var(--ink); border-color:var(--line-2)}
 .nav-profile-label{color:var(--ink-3)}
 .nav-profile-value{font-weight:500; color:var(--ink)}
 .nav-profile-caret{flex:none; color:var(--ink-3); transition:transform .18s var(--ease)}
@@ -211,21 +309,25 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   padding:8px 6px; border-radius:11px; background:var(--surface-2); font-size:13px;
   text-align:center; transition:.16s var(--ease);
 }
-.profile-opt:hover{background:#F0F0EB}
-.profile-opt[aria-checked="true"]{background:var(--ink); color:#fff}
+.profile-opt:hover{background:var(--surface-3)}
+.profile-opt[aria-checked="true"]{background:var(--ink); color:var(--on-ink)}
 .nav-scrim{position:fixed; inset:0; z-index:42; background:rgba(14,14,16,.3); animation:fade .2s}
 .nav-scrim[hidden]{display:none}
 .nav-hint{
   grid-column:1 / -1; display:flex; align-items:center; gap:14px; margin-top:10px;
-  padding:11px 12px 11px 16px; border-radius:100px; background:var(--ink); color:#fff;
+  padding:11px 12px 11px 16px; border-radius:100px; background:var(--ink); color:var(--on-ink);
 }
 .nav-hint[hidden]{display:none}
 .nav-hint-text{font-size:13px; line-height:1.4}
-.nav-hint-ok{padding:6px 14px; border-radius:100px; background:#fff; color:var(--ink); font-size:12.5px; font-weight:500; flex:none; margin-left:auto}
+.nav-hint-ok{padding:6px 14px; border-radius:100px; background:var(--on-ink); color:var(--ink); font-size:12.5px; font-weight:500; flex:none; margin-left:auto}
 
 /* ─── герой ─────────────────────────────────────────────── */
 .hero{padding:62px 0 0; max-width:720px}
-.eyebrow{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+/* Раздел над заголовком повторяет выбранный чип, а на широком экране вся
+   навигация стоит тут же, прямо над героем: подпись только дублировала её.
+   На телефоне навигация спрятана в меню — там подпись остаётся единственным
+   указанием, в каком разделе мы находимся, и её видно. */
+.eyebrow{display:none; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
 h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; margin:8px 0 14px}
 /* Размер вынесен в переменную: по ней же считается высота строки,
    на которую садится кнопка More в свёрнутом виде. */
@@ -264,7 +366,7 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   background:var(--surface-2); color:var(--ink-2); font-size:12.5px; flex:none;
   transition:.18s var(--ease);
 }
-.reset:hover{background:#F0F0EB; color:var(--ink)}
+.reset:hover{background:var(--surface-3); color:var(--ink)}
 .reset span{white-space:nowrap}
 
 /* ─── легенда полов ─────────────────────────────────────── */
@@ -286,7 +388,7 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .chart{width:100%; height:256px; cursor:crosshair; user-select:none}
 .chart svg{display:block; width:100%; height:100%; overflow:visible}
 .chart-tip{
-  position:absolute; z-index:5; background:var(--ink); color:#fff;
+  position:absolute; z-index:5; background:var(--ink); color:var(--on-ink);
   border-radius:10px; padding:8px 26px 8px 10px; font-size:12px; line-height:1.45; white-space:nowrap;
   box-shadow:0 8px 24px -10px rgba(0,0,0,.4); transform:translate(-50%,0); transition:opacity .15s;
 }
@@ -295,13 +397,13 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .chart-tip .tip-row{display:flex; justify-content:space-between; gap:14px}
 .chart-tip .tip-vals{display:inline-flex; gap:8px}
 .chart-tip .tip-v{font-family:"Geist Mono",monospace; opacity:.85}
-.chart-tip .tip-v--m{color:#9CC8EE; opacity:1}
-.chart-tip .tip-v--f{color:#F1A6CB; opacity:1}
+.chart-tip .tip-v--m{color:var(--tip-m); opacity:1}
+.chart-tip .tip-v--f{color:var(--tip-f); opacity:1}
 .tip-close{
   position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%;
-  display:grid; place-items:center; color:#fff; opacity:.55; font-size:11px; line-height:1;
+  display:grid; place-items:center; color:var(--on-ink); opacity:.55; font-size:11px; line-height:1;
 }
-.tip-close:hover{opacity:1; background:rgba(255,255,255,.14)}
+.tip-close:hover{opacity:1; background:var(--on-ink-fill)}
 
 .scrub{
   -webkit-appearance:none; appearance:none; height:26px; background:transparent;
@@ -326,7 +428,7 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 
 /* ─── фильтр списка ─────────────────────────────────────── */
 .hfilter{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 14px}
-.seg{display:inline-flex; gap:2px; padding:3px; border-radius:100px; background:rgba(14,14,16,.05); min-width:0}
+.seg{display:inline-flex; gap:2px; padding:3px; border-radius:100px; background:var(--fill); min-width:0}
 .seg-btn{
   padding:6px 13px; border-radius:100px; font-size:13.5px; color:var(--ink-2);
   transition:.18s var(--ease); display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
@@ -334,7 +436,7 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .seg-btn[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(16,16,20,.08)}
 .seg-count{
   font-family:"Geist Mono",monospace; font-size:11px; padding:1px 5px; border-radius:100px;
-  background:rgba(14,14,16,.07); color:var(--ink-2);
+  background:var(--fill); color:var(--ink-2);
 }
 
 /* ─── гормоны ───────────────────────────────────────────── */
@@ -420,17 +522,17 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   display:inline-flex; align-items:center; height:calc(var(--timing-fs) * 1.55);
   padding:0 11px; border-radius:100px; font-size:12.5px; color:var(--ink-2);
   /* полупрозрачная заливка поверх непрозрачного фона карточки */
-  background:linear-gradient(rgba(14,14,16,.06),rgba(14,14,16,.06)), var(--surface);
+  background:linear-gradient(var(--fill),var(--fill)), var(--surface);
   transition:.16s var(--ease);
 }
 .timing-more[hidden]{display:none}
 .timing-more::before{
   content:""; position:absolute; right:100%; top:0; bottom:0; width:32px; pointer-events:none;
-  background:linear-gradient(90deg,rgba(255,255,255,0),var(--surface));
+  background:linear-gradient(90deg,transparent,var(--surface));
 }
 .timing.is-open .timing-more{position:static; height:auto; margin-top:10px; padding:4px 12px}
 .timing.is-open .timing-more::before{display:none}
-.timing-more:hover{background:linear-gradient(rgba(14,14,16,.1),rgba(14,14,16,.1)), var(--surface); color:var(--ink)}
+.timing-more:hover{background:linear-gradient(var(--fill-hi),var(--fill-hi)), var(--surface); color:var(--ink)}
 
 /* ─── подвал ────────────────────────────────────────────── */
 .foot{padding:10px var(--pad) 44px; max-width:1080px; margin:0 auto; width:100%}
@@ -443,9 +545,9 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .foot-warn-lead{color:var(--ink-2)}
 .foot-more{
   font-size:12px; color:var(--ink-2); padding:1px 7px; margin-left:6px; border-radius:100px;
-  background:rgba(14,14,16,.06); transition:.16s var(--ease); white-space:nowrap;
+  background:var(--fill); transition:.16s var(--ease); white-space:nowrap;
 }
-.foot-more:hover{background:rgba(14,14,16,.1); color:var(--ink)}
+.foot-more:hover{background:var(--fill-hi); color:var(--ink)}
 .foot-row{display:flex; align-items:center; justify-content:space-between; gap:18px; margin-top:14px}
 .foot-row .profile{flex:none}
 /* В подвале кнопка живёт без подложки: строка и так служебная. */
@@ -468,13 +570,13 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 /* Полоса прокрутки появляется только на время прокрутки: в покое ползунок
    прозрачный, место под него зарезервировано и не дёргает вёрстку. */
 .detail{scrollbar-width:thin; scrollbar-color:transparent transparent}
-.detail.is-scrolling{scrollbar-color:rgba(14,14,16,.22) transparent}
+.detail.is-scrolling{scrollbar-color:var(--scroll-thumb) transparent}
 .detail::-webkit-scrollbar{width:6px}
 .detail::-webkit-scrollbar-track{background:transparent}
 .detail::-webkit-scrollbar-thumb{
   background:transparent; border-radius:100px; transition:background-color .3s var(--ease);
 }
-.detail.is-scrolling::-webkit-scrollbar-thumb{background:rgba(14,14,16,.22)}
+.detail.is-scrolling::-webkit-scrollbar-thumb{background:var(--scroll-thumb)}
 /* Одна круглая кнопка на всё: крестик в меню, крестик и «закрепить» в окне гормона.
    Кружок 34px, тап-зона расширена невидимым полем — палец попадает и на телефоне. */
 .iconbtn{
@@ -483,8 +585,8 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   display:grid; place-items:center; transition:.15s var(--ease);
 }
 .iconbtn::after{content:""; position:absolute; inset:-6px; border-radius:50%}
-.iconbtn:hover{background:#EBEBE5; color:var(--ink)}
-.iconbtn[aria-pressed="true"]{background:var(--ink); color:#fff}
+.iconbtn:hover{background:var(--surface-3); color:var(--ink)}
+.iconbtn[aria-pressed="true"]{background:var(--ink); color:var(--on-ink)}
 
 .detail-tools{position:absolute; top:12px; right:12px; z-index:2; display:flex; gap:6px}
 .detail-close[hidden]{display:none}
@@ -545,6 +647,16 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
     height:var(--topbar-h); margin-bottom:12px; flex:none;
   }
   .nav-title{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+  /* В панели знак темы встаёт слева от крестика: auto-отступ съедает
+     свободное место, и обе кнопки остаются парой у правого края —
+     крестик при этом не сходит с оси бургера. */
+  .nav-top .theme{
+    position:static; transform:none; opacity:1; pointer-events:auto;
+    width:44px; height:44px; margin-left:auto; border-radius:50%;
+    background:none; box-shadow:none; color:var(--ink-2);
+  }
+  .nav-top .theme:hover{background:none}
+  .nav-top .theme svg{width:22px; height:22px}
   /* пол и возраст трогают редко — они уходят в самый низ панели */
   .profile{margin:auto 0 0; flex:none}
   .nav-profile{display:flex; width:100%; justify-content:space-between; margin:0; padding:12px 14px; border-radius:13px}
@@ -561,11 +673,11 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .chip-sub{flex:1 0 100%; padding:9px 0 3px}
   .nav-hint{
     display:block; position:sticky; bottom:0; margin-top:18px; padding:14px;
-    border-radius:14px; background:var(--ink); color:#fff;
+    border-radius:14px; background:var(--ink); color:var(--on-ink);
   }
   .nav-hint[hidden]{display:none}
   .nav-hint-text{font-size:13px; line-height:1.45; text-wrap:pretty}
-  .nav-hint-ok{margin-top:10px; padding:8px 16px; border-radius:100px; background:#fff; color:var(--ink); font-size:13px; font-weight:500}
+  .nav-hint-ok{margin-top:10px; padding:8px 16px; border-radius:100px; background:var(--on-ink); color:var(--ink); font-size:13px; font-weight:500}
 
   .stats{grid-template-columns:repeat(3,1fr); gap:6px; margin:30px 0 6px}
   .stat{padding:11px 10px 12px; border-radius:11px}
@@ -579,6 +691,7 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .timing-more{height:calc(var(--timing-fs) * 1.5); font-size:12px}
   .timing.is-open .timing-more{margin-top:9px; padding:3px 11px}
   .hero{padding-top:18px}
+  .eyebrow{display:block}
   /* Описание сценария показываем тремя строками, остальное — под More.
      Кнопка занимает ровно высоту третьей строки и стоит с ней на одном уровне;
      слева от неё градиент цвета фона прячет обрезанный хвост строки. */
@@ -588,11 +701,11 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
     height:calc(var(--blurb-fs) * 1.5); padding:0 11px; border-radius:100px;
     font-size:12px; color:var(--ink-2);
     /* полупрозрачная заливка поверх непрозрачного фона страницы */
-    background:linear-gradient(rgba(14,14,16,.06),rgba(14,14,16,.06)), var(--bg);
+    background:linear-gradient(var(--fill),var(--fill)), var(--bg);
   }
   .blurb-more::before{
     content:""; position:absolute; right:100%; top:0; bottom:0; width:32px; pointer-events:none;
-    background:linear-gradient(90deg,rgba(244,244,241,0),var(--bg));
+    background:linear-gradient(90deg,transparent,var(--bg));
   }
   .blurb-wrap.is-open .blurb{display:block; overflow:visible}
   .blurb-wrap.is-open .blurb-more{
