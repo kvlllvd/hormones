@@ -101,14 +101,16 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   letter-spacing:-.02em; text-decoration:none; white-space:nowrap; min-width:0; flex:none;
 }
 .wordmark-text{overflow:hidden; text-overflow:ellipsis}
-.wordmark-mark,.wordmark-up{width:20px; height:20px; flex:none; color:var(--ink); display:block}
-.wordmark-up{display:none}
+/* Знак не квадратный (431×493) — задаём высоту, ширину считает сам браузер. */
+.wordmark-mark{width:auto; height:19px; flex:none; color:var(--ink); display:block}
+.wordmark-up{width:20px; height:20px; flex:none; color:var(--ink); display:none}
 /* На десктопе знак под курсором превращается в стрелку «наверх» — это и есть
    единственное, что делает логотип. После клика возвращаем знак, не дожидаясь,
    пока курсор уйдёт: страница уже наверху, и стрелке нечего предлагать. */
+/* Пока страница не прокручена, стрелке нечего предлагать — знак остаётся знаком. */
 @media (hover:hover){
-  .wordmark:hover:not(.is-reverted) .wordmark-mark{display:none}
-  .wordmark:hover:not(.is-reverted) .wordmark-up{display:block}
+  .topbar:not(.is-top) .wordmark:hover:not(.is-reverted) .wordmark-mark{display:none}
+  .topbar:not(.is-top) .wordmark:hover:not(.is-reverted) .wordmark-up{display:block}
 }
 
 .sect-chip{
