@@ -101,7 +101,15 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   letter-spacing:-.02em; text-decoration:none; white-space:nowrap; min-width:0; flex:none;
 }
 .wordmark-text{overflow:hidden; text-overflow:ellipsis}
-.wordmark-mark{width:20px; height:20px; flex:none; color:var(--ink); display:block}
+.wordmark-mark,.wordmark-up{width:20px; height:20px; flex:none; color:var(--ink); display:block}
+.wordmark-up{display:none}
+/* На десктопе знак под курсором превращается в стрелку «наверх» — это и есть
+   единственное, что делает логотип. После клика возвращаем знак, не дожидаясь,
+   пока курсор уйдёт: страница уже наверху, и стрелке нечего предлагать. */
+@media (hover:hover){
+  .wordmark:hover:not(.is-reverted) .wordmark-mark{display:none}
+  .wordmark:hover:not(.is-reverted) .wordmark-up{display:block}
+}
 
 .sect-chip{
   display:inline-flex; align-items:center; min-width:0; max-width:46%; margin-left:auto;

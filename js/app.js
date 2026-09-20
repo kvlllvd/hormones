@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=19';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=19';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=19';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=20';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=20';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=20';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=19';
+} from './engine.js?v=20';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -822,7 +822,9 @@ function bind() {
     toTop();
   };
   /* Логотип никуда не уводит — страница одна. Вместо перезагрузки поднимаем наверх. */
-  document.querySelector('.wordmark').onclick = (e) => { e.preventDefault(); toTop(); };
+  const wm = document.querySelector('.wordmark');
+  wm.onclick = (e) => { e.preventDefault(); wm.classList.add('is-reverted'); toTop(); };
+  wm.onmouseleave = () => wm.classList.remove('is-reverted');
 
   $('playBtn').onclick = () => (state.playing ? stopPlay() : startPlay());
   $('scrub').oninput = (e) => { stopPlay(); updateTime(invLog(e.target.value / 1000, state.horizon)); };
