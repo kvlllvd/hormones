@@ -17,7 +17,7 @@ const SEX_LABEL = { m: 'М', f: 'Ж' };
 let neverConfigured = true;
 
 const state = {
-  sex: null, age: null, cat: 'bond', sit: 'sex',
+  sex: null, age: null, cat: 'bond', sit: 'love',
   t: 0, horizon: 1, sc: null, scByS: {}, sexes: [], sexesOn: new Set(),
   active: null, pinned: null, playing: false, raf: 0,
   view: 'active', hideTimer: 0, tipPinned: false, navOpen: false,
