@@ -175,8 +175,10 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .hero{padding:22px 0 0; max-width:720px}
 .eyebrow{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
 h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; margin:8px 0 14px}
-.blurb{font-size:clamp(15px,3.6vw,18px); line-height:1.5; color:var(--ink-2); text-wrap:pretty}
-.blurb-wrap{position:relative}
+/* Размер вынесен в переменную: по ней же считается высота строки,
+   на которую садится кнопка More в свёрнутом виде. */
+.blurb-wrap{position:relative; --blurb-fs:clamp(15px,3.6vw,18px)}
+.blurb{font-size:var(--blurb-fs); line-height:1.5; color:var(--ink-2); text-wrap:pretty}
 .blurb-more{display:none}
 .blurb-more[hidden]{display:none}
 
@@ -471,18 +473,26 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .timing-text{font-size:13.5px; line-height:1.5}
   .timing-more{margin-top:9px; font-size:12px; padding:3px 11px}
   .hero{padding-top:18px}
-  /* Описание сценария показываем тремя строками, остальное — под More
-     в конце третьей строки; фон-подложка прячет под кнопкой хвост текста. */
+  /* Описание сценария показываем тремя строками, остальное — под More.
+     Кнопка занимает ровно высоту третьей строки и стоит с ней на одном уровне;
+     слева от неё градиент цвета фона прячет обрезанный хвост строки. */
   .blurb{display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
   .blurb-more{
-    display:inline-block; position:absolute; right:0; bottom:0; font-size:13px; color:var(--ink-2);
-    padding:0 0 0 30px; background:linear-gradient(90deg,rgba(244,244,241,0) 0,var(--bg) 26px);
+    display:inline-flex; align-items:center; position:absolute; right:0; bottom:0;
+    height:calc(var(--blurb-fs) * 1.5); padding:0 11px; border-radius:100px;
+    font-size:12px; color:var(--ink-2);
+    /* полупрозрачная заливка поверх непрозрачного фона страницы */
+    background:linear-gradient(rgba(14,14,16,.06),rgba(14,14,16,.06)), var(--bg);
+  }
+  .blurb-more::before{
+    content:""; position:absolute; right:100%; top:0; bottom:0; width:32px; pointer-events:none;
+    background:linear-gradient(90deg,rgba(244,244,241,0),var(--bg));
   }
   .blurb-wrap.is-open .blurb{display:block; overflow:visible}
   .blurb-wrap.is-open .blurb-more{
-    position:static; margin-top:10px; padding:3px 11px; border-radius:100px;
-    background:rgba(14,14,16,.06);
+    position:static; height:auto; margin-top:10px; padding:3px 11px;
   }
+  .blurb-wrap.is-open .blurb-more::before{display:none}
   .timeline{padding:15px 13px 12px; border-radius:17px}
   .chart{height:214px}
   .hgrid{grid-template-columns:1fr}
