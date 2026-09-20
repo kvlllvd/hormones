@@ -1,8 +1,8 @@
-/* Полнота данных: у каждого сценария есть «Лучшее время», фазы и живая
+/* Полнота данных: у каждого сценария есть рекомендация, фазы и живая
    категория, лишних ключей нет, гормоны не дублируются и не висят без сценариев.
    Ловится то, что sweep не видит: он проверяет числа, а не связки.
    Запуск из корня проекта: node tools/check.mjs */
-import { SITUATIONS, TIMING, PHASES, DOSE, CATEGORIES, COMPARE, SITUATION_BY_ID } from '../js/situations.js';
+import { SITUATIONS, TIMING, PHASES, DOSE, SOURCES, CATEGORIES, COMPARE, SITUATION_BY_ID } from '../js/situations.js';
 import { HORMONES } from '../js/data.js';
 import { SEXES, AGES, profileFactors } from '../js/profile.js';
 
@@ -11,15 +11,17 @@ const say = (...a) => { console.log(...a); bad++; };
 const catIds = new Set(CATEGORIES.map(c => c.id));
 
 for (const s of SITUATIONS) {
-  if (!TIMING[s.id]) say('нет «Лучшего времени»', s.id);
+  if (!TIMING[s.id]) say('нет рекомендации', s.id);
   if (!PHASES[s.id]) say('нет фаз', s.id);
+  if (!SOURCES[s.id]) say('не сказано, откуда данные', s.id);
   if (!catIds.has(s.cat)) say('нет категории', s.id, s.cat);
   if (!s.effects?.length) say('нет эффектов', s.id);
   if (!s.name || !s.blurb || !s.recovery) say('нет имени или текста', s.id);
 }
-for (const k of Object.keys(TIMING)) if (!SITUATION_BY_ID[k]) say('лишнее «Лучшее время»', k);
+for (const k of Object.keys(TIMING)) if (!SITUATION_BY_ID[k]) say('лишняя рекомендация', k);
 for (const k of Object.keys(PHASES)) if (!SITUATION_BY_ID[k]) say('лишние фазы', k);
 for (const k of Object.keys(DOSE)) if (!SITUATION_BY_ID[k]) say('лишняя доза', k);
+for (const k of Object.keys(SOURCES)) if (!SITUATION_BY_ID[k]) say('лишний источник', k);
 for (const id of COMPARE) if (!SITUATION_BY_ID[id]) say('лишнее сравнение полов', id);
 
 const seen = new Set();

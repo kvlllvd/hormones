@@ -112,6 +112,7 @@ async function suiteChart(p) {
       outMarks, labelOut, labelHit, marks: marks.length,
       overflow: de.scrollWidth > innerWidth + 1 ? de.scrollWidth + '>' + innerWidth : null,
       timing: (document.getElementById('timingText').textContent || '').trim().length,
+      source: (document.getElementById('sourceText').textContent || '').trim().length,
       stats: document.getElementById('stats').children.length,
       recovery: document.getElementById('recoveryList').children.length,
       hormones: document.getElementById('hormones').children.length,
@@ -134,7 +135,8 @@ async function suiteChart(p) {
       if (r.fail) { problems.push(`${key} ${s.id}: ${r.fail}`); continue; }
       if (r.name !== s.name) problems.push(`${key} ${s.id}: заголовок «${r.name}» вместо «${s.name}»`);
       if (r.overflow) problems.push(`${key} ${s.id}: переполнение ${r.overflow}`);
-      if (!r.timing) problems.push(`${key} ${s.id}: пустое «Лучшее время»`);
+      if (!r.timing) problems.push(`${key} ${s.id}: пустая рекомендация`);
+      if (!r.source) problems.push(`${key} ${s.id}: не сказано, откуда данные`);
       if (r.stats !== 3) problems.push(`${key} ${s.id}: плашек показателей ${r.stats}`);
       if (!r.recovery) problems.push(`${key} ${s.id}: пустой список возврата`);
       if (!r.hormones) problems.push(`${key} ${s.id}: пустой список гормонов`);

@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hormone Atlas — что происходит с телом в разных ситуациях</title>
-<meta name="description" content="Интерактивная карта гормональной системы: 21 гормон, 47 жизненных сценариев. Видно, что поднимается, что падает и сколько времени нужно системе, чтобы вернуться к норме.">
+<meta name="description" content="Интерактивная карта гормональной системы: 21 гормон, 48 жизненных сценариев. Видно, что поднимается, что падает и сколько времени нужно системе, чтобы вернуться к норме.">
 <meta name="theme-color" content="#F5F5F3">
 <meta property="og:title" content="Hormone Atlas">
-<meta property="og:description" content="21 гормон, 47 сценариев: влюблённость, секс, расставание, недосып, алкоголь, тренировки, велозаезды, плавание. Что меняется и когда вернётся к норме.">
+<meta property="og:description" content="21 гормон, 48 сценариев: влюблённость, секс, расставание, недосып, алкоголь, тренировки, велозаезды, плавание. Что меняется и когда вернётся к норме.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=38">
-<link rel="icon" href="favicon.svg?v=38" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css?v=39">
+<link rel="icon" href="favicon.svg?v=39" type="image/svg+xml">
 </head>
 <body>
 
@@ -98,7 +98,7 @@
   <section class="stats" id="stats"></section>
 
   <div class="timing" id="timing">
-    <h3 class="timing-title">Лучшее время</h3>
+    <h3 class="timing-title">Рекомендация</h3>
     <p class="timing-text" id="timingText"></p>
     <button class="timing-more" id="timingMore" type="button" aria-expanded="false">Ещё</button>
   </div>
@@ -110,9 +110,14 @@
         <span class="time-caption" id="timeCaption">от начала события</span>
       </div>
       <button class="reset" id="resetBtn" title="Вернуть график в исходное положение" aria-label="Сбросить график">
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-          <path d="M10.4 3.84A4.8 4.8 0 1 1 7.17 3.27" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          <path d="M9.73 2.82 7.03 5.33 6.33 1.39Z" fill="currentColor"/>
+        <!-- Дуга 250° и треугольник на её конце по касательной. Знак был
+             неразборчив на 14px: тонкая дуга в 320° почти смыкалась, и стрелка
+             сливалась с ней в кляксу. Теперь разрыв шире, обводка толще, знак
+             рисуется в 16px, а основание стрелки отодвинуто назад на 1,3 —
+             иначе круглый колпачок дуги торчит из-под неё. -->
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path d="M12.70 6.29 A5.0 5.0 0 1 1 4.79 4.17" fill="none" stroke="currentColor" stroke-width="2.0" stroke-linecap="round"/>
+          <path d="M7.39 1.98 5.20 6.69 2.38 3.32Z" fill="currentColor"/>
         </svg>
         <span>Сбросить</span>
       </button>
@@ -150,14 +155,19 @@
     <p class="recovery-text" id="recoveryText"></p>
     <div class="recovery-list" id="recoveryList"></div>
   </section>
+
+  <section class="source" aria-label="Источник данных">
+    <h2 class="source-title">Откуда эти цифры</h2>
+    <p class="source-text" id="sourceText"></p>
+  </section>
 </main>
 
 <footer class="foot">
   <p class="foot-warn" id="footWarn">
-    <span class="foot-warn-lead">Это справочная модель, а не диагностика.</span><span class="foot-warn-rest"> Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы. Направление и механизм каждой реакции сверены с Endotext (NCBI Bookshelf), раздел «Вещества» — дополнительно с NIDA (National Institute on Drug Abuse); кратности, которых эти источники не приводят, взяты из отдельных работ в PubMed. Там, где источники расходятся, в подписи к гормону сказано, чем разовый приём отличается от регулярного.</span><button class="foot-more" id="footMore" type="button" aria-expanded="false">Ещё</button>
+    <span class="foot-warn-lead">Это справочная модель, а не диагностика.</span><span class="foot-warn-rest"> Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы. Направление и механизм каждой реакции сверены с Endotext (NCBI Bookshelf), раздел «Вещества» — дополнительно с NIDA (National Institute on Drug Abuse); кратности, которых эти источники не приводят, взяты из отдельных работ в PubMed. Там, где источники расходятся, в подписи к гормону сказано, чем разовый приём отличается от регулярного. Все величины здесь — средние по возрастным группам, а не ваш личный результат: внутри одной группы разброс больше, чем разница между группами. Доза, тренированность, состояние здоровья, лекарства и то, насколько вы успели восстановиться после прошлой нагрузки, меняют и высоту пика, и время возврата к норме — иногда в разы. Один и тот же сценарий у выспавшегося и у невыспавшегося человека идёт по-разному.</span><button class="foot-more" id="footMore" type="button" aria-expanded="false">Ещё</button>
   </p>
   <div class="foot-row" id="footRow">
-    <p class="foot-meta">21 гормон · 47 сценариев · источники: <a href="https://www.ncbi.nlm.nih.gov/books/NBK278943/">Endotext</a>, <a href="https://nida.nih.gov/">NIDA</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/">PubMed</a> · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
+    <p class="foot-meta">21 гормон · 48 сценариев · источники: <a href="https://www.ncbi.nlm.nih.gov/books/NBK278943/">Endotext</a>, <a href="https://nida.nih.gov/">NIDA</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/">PubMed</a> · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
   </div>
 </footer>
 
@@ -175,6 +185,6 @@
 </div>
 <div class="scrim" id="scrim" hidden></div>
 
-<script type="module" src="js/app.js?v=38"></script>
+<script type="module" src="js/app.js?v=39"></script>
 </body>
 </html>
