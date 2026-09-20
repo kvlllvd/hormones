@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=38';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=38';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=38';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=39';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE, SOURCES } from './situations.js?v=39';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=39';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=38';
+} from './engine.js?v=39';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -366,6 +366,7 @@ function renderStats(sit) {
 }
 
 function renderRecovery(sit) {
+  $('sourceText').textContent = SOURCES[sit.id];
   $('recoveryText').textContent = sit.recovery;
   $('timingText').textContent = TIMING[sit.id] || '';
   syncTiming();
