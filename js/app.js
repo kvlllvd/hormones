@@ -137,6 +137,16 @@ function hideMenuHint() {
 
 /* Чип раздела в шапке нужен только тогда, когда сам заголовок уже уехал
    под неё: пока заголовок виден, чип дублировал бы его. */
+/* Кнопка нужна, только если текст действительно не влез в три строки:
+   на широком экране обрезки нет вовсе, и кнопка сама остаётся скрытой. */
+function syncBlurb() {
+  const p = $('sitBlurb'), btn = $('blurbMore');
+  $('blurbWrap').classList.remove('is-open');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.textContent = 'More';
+  btn.hidden = p.scrollHeight <= p.clientHeight + 1;
+}
+
 function syncChip() {
   const bar = document.querySelector('.topbar');
   bar.classList.toggle('is-scrolled', $('sitName').getBoundingClientRect().bottom <= bar.offsetHeight);
@@ -260,6 +270,7 @@ function renderAll() {
   $('sitTag').textContent = CATEGORIES.find(c => c.id === sit.cat).title;
   $('sitName').textContent = sit.name;
   $('sitBlurb').textContent = sit.blurb;
+  syncBlurb();
   $('sectChipText').textContent = sit.short || sit.name;
 
   renderStats(sit);
@@ -796,6 +807,13 @@ function bind() {
     if (b) toggleSex(b.dataset.sex);
   });
 
+  const bmore = $('blurbMore');
+  bmore.onclick = () => {
+    const open = $('blurbWrap').classList.toggle('is-open');
+    bmore.setAttribute('aria-expanded', open);
+    bmore.textContent = open ? 'Less' : 'More';
+  };
+
   const tmore = $('timingMore');
   tmore.onclick = () => {
     const open = $('timing').classList.toggle('is-open');
@@ -852,6 +870,7 @@ function bind() {
     rt = setTimeout(() => {
       if (!isSheet() && state.navOpen) closeNav();
       placeProfile();
+      syncBlurb();
       syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
@@ -876,6 +895,7 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1]
 
 bind();
 placeProfile();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncBlurb(); syncChip(); });
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
