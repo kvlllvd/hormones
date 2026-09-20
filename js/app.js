@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=12';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE } from './situations.js?v=12';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=12';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=13';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE } from './situations.js?v=13';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=13';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=12';
+} from './engine.js?v=13';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -831,6 +831,12 @@ function bind() {
   };
 
   const det = $('detail');
+  let scrollFade = 0;
+  det.addEventListener('scroll', () => {
+    det.classList.add('is-scrolling');
+    clearTimeout(scrollFade);
+    scrollFade = setTimeout(() => det.classList.remove('is-scrolling'), 700);
+  }, { passive: true });
   det.addEventListener('mouseenter', () => clearTimeout(state.hideTimer));
   det.addEventListener('mouseleave', () => { if (!state.pinned) scheduleHide(); });
 

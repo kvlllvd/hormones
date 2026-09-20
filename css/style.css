@@ -411,6 +411,16 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   animation:pop .22s var(--ease); overscroll-behavior:contain;
 }
 .detail[hidden]{display:none}
+/* Полоса прокрутки появляется только на время прокрутки: в покое ползунок
+   прозрачный, место под него зарезервировано и не дёргает вёрстку. */
+.detail{scrollbar-width:thin; scrollbar-color:transparent transparent}
+.detail.is-scrolling{scrollbar-color:rgba(14,14,16,.22) transparent}
+.detail::-webkit-scrollbar{width:6px}
+.detail::-webkit-scrollbar-track{background:transparent}
+.detail::-webkit-scrollbar-thumb{
+  background:transparent; border-radius:100px; transition:background-color .3s var(--ease);
+}
+.detail.is-scrolling::-webkit-scrollbar-thumb{background:rgba(14,14,16,.22)}
 .detail-close[hidden]{display:none}
 .detail-close{
   position:absolute; top:12px; right:12px; width:30px; height:30px; border-radius:50%;
