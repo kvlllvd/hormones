@@ -145,7 +145,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .chips{display:flex; flex-wrap:wrap; gap:5px; padding:6px 0 0}
 .cat{
   flex:none; display:inline-flex; align-items:center; gap:4px;
-  padding:3px 0; font-size:13px; font-weight:500; letter-spacing:-.01em;
+  padding:3px 0; font-size:12px; font-weight:500; letter-spacing:-.01em;
   color:var(--ink-3); transition:.18s var(--ease); white-space:nowrap;
 }
 /* Точка есть всегда, у невыбранных она прозрачная: иначе ряд дёргался бы
@@ -166,7 +166,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .chips > .chip-sub:first-child{padding-left:0}
 /* На десктопе чипы подразделов мельче разделов; на телефоне размер свой — 13px. */
 .chip{
-  flex:none; padding:5px 11px; border-radius:100px; font-size:11px; background:var(--surface);
+  flex:none; padding:5px 11px; border-radius:100px; font-size:12px; background:var(--surface);
   color:var(--ink-2); border:1px solid var(--line); transition:.2s var(--ease);
   white-space:nowrap;
 }
@@ -180,6 +180,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   0%,100%{box-shadow:0 0 0 3px rgba(14,14,16,.12)}
   50%{box-shadow:0 0 0 7px rgba(14,14,16,.05)}
 }
+.profile{position:relative}
 .nav-profile{
   display:inline-flex; align-items:center; gap:8px; padding:6px 13px; border-radius:100px;
   background:var(--surface); border:1px solid var(--line); font-size:13px; color:var(--ink-2);
@@ -188,6 +189,30 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .nav-profile:hover{color:var(--ink); border-color:#D6D6CF}
 .nav-profile-label{color:var(--ink-3)}
 .nav-profile-value{font-weight:500; color:var(--ink)}
+.nav-profile-caret{flex:none; color:var(--ink-3); transition:transform .18s var(--ease)}
+.nav-profile[aria-expanded="true"] .nav-profile-caret{transform:rotate(180deg)}
+
+/* Выпадающее меню профиля раскрывается вверх из самой кнопки: она стоит
+   в подвале, и вниз ему некуда. */
+.profile-pop{
+  position:absolute; bottom:calc(100% + 8px); left:0; z-index:45; width:250px;
+  padding:14px; border-radius:16px; background:var(--surface);
+  box-shadow:0 2px 6px rgba(16,16,20,.06), 0 24px 50px -22px rgba(16,16,20,.45);
+  animation:pop .18s var(--ease);
+}
+.profile-pop[hidden]{display:none}
+.profile-pop-label{
+  display:block; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:7px;
+}
+.profile-opts{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:14px}
+.profile-opts--age{grid-template-columns:repeat(3,1fr); margin-bottom:0}
+.profile-opt{
+  padding:8px 6px; border-radius:11px; background:var(--surface-2); font-size:13px;
+  text-align:center; transition:.16s var(--ease);
+}
+.profile-opt:hover{background:#F0F0EB}
+.profile-opt[aria-checked="true"]{background:var(--ink); color:#fff}
 .nav-scrim{position:fixed; inset:0; z-index:42; background:rgba(14,14,16,.3); animation:fade .2s}
 .nav-scrim[hidden]{display:none}
 .nav-hint{
@@ -415,7 +440,11 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 }
 .foot-more:hover{background:rgba(14,14,16,.1); color:var(--ink)}
 .foot-row{display:flex; align-items:center; justify-content:space-between; gap:18px; margin-top:14px}
-.foot-row .nav-profile{margin:0; flex:none}
+.foot-row .profile{flex:none}
+/* В подвале кнопка живёт без подложки: строка и так служебная. */
+.foot-row .nav-profile{margin:0; background:none; border-color:transparent; padding:6px 4px}
+.foot-row .nav-profile:hover{border-color:transparent; color:var(--ink)}
+.foot-row .nav-profile-label{display:none}
 .foot-meta{font-size:12.5px; color:var(--ink-3); min-width:0}
 .foot-meta a{color:var(--ink-2)}
 
@@ -499,7 +528,7 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .picker::-webkit-scrollbar{width:0; height:0}
   .picker.is-open{transform:none; visibility:visible}
   .nav-top{order:0; flex:none} .cats{order:1; flex:none} .chips{order:2; flex:none} .nav-hint{order:3}
-  .nav-profile{order:4}
+  .profile{order:4}
   /* Шапка панели повторяет шапку страницы: «Разделы» стоят на уровне логотипа,
      а крестик попадает ровно в центр бургера — по обеим осям. */
   .nav-top{
@@ -508,7 +537,9 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   }
   .nav-title{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
   /* пол и возраст трогают редко — они уходят в самый низ панели */
-  .nav-profile{display:flex; width:100%; justify-content:space-between; margin:auto 0 0; padding:12px 14px; border-radius:13px; flex:none}
+  .profile{margin:auto 0 0; flex:none}
+  .nav-profile{display:flex; width:100%; justify-content:space-between; margin:0; padding:12px 14px; border-radius:13px}
+  .nav-profile-caret{display:none}
   .cats,.chips{display:flex; flex-wrap:wrap; padding:0}
   .cats{gap:4px 18px; margin-bottom:14px; padding:0 0 14px; border-bottom:1px solid var(--line-soft)}
   .chips{gap:5px; padding:0 0 6px}

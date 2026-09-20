@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=32';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=32';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=32';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=33';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=33';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=33';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=32';
+} from './engine.js?v=33';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -94,9 +94,48 @@ function applyProfile() {
 /* Пол и возраст трогают редко: на широком экране кнопка стоит в подвале
    рядом со служебной строкой, на узком — в самом низу меню. */
 function placeProfile() {
-  const btn = $('navProfile');
+  const box = $('profile');
   const host = isSheet() ? $('picker') : $('footRow');
-  if (btn.parentElement !== host) host.appendChild(btn);
+  if (box.parentElement !== host) host.appendChild(box);
+}
+
+/* На широком экране пол и возраст меняются прямо из подвала: кнопка раскрывает
+   меню и применяет выбор сразу, без подтверждения. На телефоне остаётся карточка —
+   в узкой панели выпадающему меню негде развернуться. */
+function buildProfilePop() {
+  const mk = (host, items, key) => {
+    host.innerHTML = '';
+    items.forEach(it => {
+      const b = document.createElement('button');
+      b.className = 'profile-opt'; b.type = 'button'; b.role = 'radio';
+      b.textContent = it.title;
+      b.setAttribute('aria-checked', state[key] === it.id);
+      b.onclick = () => {
+        if (state[key] === it.id) return closeProfilePop();
+        state[key] = it.id;
+        neverConfigured = false;
+        saveProfile(); applyProfile();
+        state.sexesOn = new Set([state.sex]);
+        renderAll();
+        closeProfilePop();
+      };
+      host.appendChild(b);
+    });
+  };
+  mk($('popSex'), SEXES, 'sex');
+  mk($('popAge'), AGES, 'age');
+}
+function openProfilePop() {
+  buildProfilePop();
+  $('profilePop').hidden = false;
+  $('navProfile').setAttribute('aria-expanded', 'true');
+}
+function closeProfilePop() {
+  $('profilePop').hidden = true;
+  $('navProfile').setAttribute('aria-expanded', 'false');
+}
+function toggleProfilePop() {
+  $('profilePop').hidden ? openProfilePop() : closeProfilePop();
 }
 
 /* ─── меню разделов ─────────────────────────────────────── */
@@ -781,7 +820,7 @@ const toTop = () =>
 /* ─── события ───────────────────────────────────────────── */
 
 function bind() {
-  $('navProfile').onclick = openOnboarding;
+  $('navProfile').onclick = () => (isSheet() ? openOnboarding() : toggleProfilePop());
   $('burgerBtn').onclick = () => (state.navOpen ? closeNav() : openNav());
   $('navClose').onclick = closeNav;
   $('navScrim').onclick = closeNav;
@@ -842,6 +881,11 @@ function bind() {
   det.addEventListener('mouseenter', () => clearTimeout(state.hideTimer));
   det.addEventListener('mouseleave', () => { if (!state.pinned) scheduleHide(); });
 
+  /* клик мимо выпадающего меню профиля закрывает его */
+  document.addEventListener('click', (e) => {
+    if (!$('profilePop').hidden && !e.target.closest('#profile')) closeProfilePop();
+  });
+
   /* клик по любому свободному месту закрывает окно гормона */
   document.addEventListener('click', (e) => {
     if ($('detail').hidden) return;
@@ -871,7 +915,7 @@ function bind() {
   addEventListener('scroll', syncChip, { passive: true });
 
   addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeDetail(); closeOnboarding(); closeNav(); hideTip(); }
+    if (e.key === 'Escape') { closeDetail(); closeOnboarding(); closeNav(); hideTip(); closeProfilePop(); }
   });
 
   let rt;
