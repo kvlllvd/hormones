@@ -110,6 +110,12 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 }
 .cat:hover{color:var(--ink)}
 .cat[aria-selected="true"]{color:var(--ink); background:rgba(14,14,16,.06)}
+.chip-sub{
+  flex:none; align-self:center; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--ink-3); padding:0 3px 0 11px; margin-left:5px; white-space:nowrap;
+  border-left:1px solid var(--line); line-height:1.9;
+}
+.chips > .chip-sub:first-child{border-left:0; padding-left:0; margin-left:0}
 .chip{
   flex:none; padding:9px 15px; border-radius:100px; font-size:14.5px; background:var(--surface);
   color:var(--ink-2); box-shadow:0 1px 2px rgba(16,16,20,.05); transition:.2s var(--ease);
@@ -149,9 +155,16 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 }
 .time-caption{font-size:12.5px; color:var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .time-load{font-size:12px; color:var(--ink-3); white-space:nowrap; font-family:"Geist Mono",monospace}
+.reset{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:100px;
+  background:var(--surface-2); color:var(--ink-2); font-size:12.5px; flex:none;
+  transition:.18s var(--ease);
+}
+.reset:hover{background:#F0F0EB; color:var(--ink)}
+.reset span{white-space:nowrap}
 
 .chart-wrap{position:relative; touch-action:pan-y}
-.chart{width:100%; height:232px; cursor:crosshair; user-select:none}
+.chart{width:100%; height:256px; cursor:crosshair; user-select:none}
 .chart svg{display:block; width:100%; height:100%; overflow:visible}
 .chart-tip{
   position:absolute; z-index:5; pointer-events:none; background:var(--ink); color:#fff;
@@ -184,6 +197,50 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .scrub:focus-visible::-webkit-slider-thumb{border-color:var(--ink)}
 .chart-note{font-size:12px; color:var(--ink-3); margin-top:6px; line-height:1.4; text-wrap:pretty}
 
+/* ─── фильтр списка ─────────────────────────────────────── */
+.hfilter{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 14px}
+.seg{display:inline-flex; gap:2px; padding:3px; border-radius:100px; background:rgba(14,14,16,.05)}
+.seg-btn{
+  padding:6px 13px; border-radius:100px; font-size:13.5px; color:var(--ink-2);
+  transition:.18s var(--ease); display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+}
+.seg-btn[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(16,16,20,.08)}
+.seg-count{
+  font-family:"Geist Mono",monospace; font-size:11px; padding:1px 5px; border-radius:100px;
+  background:rgba(14,14,16,.07); color:var(--ink-2);
+}
+.seg-edit{font-size:13.5px; color:var(--ink-3); padding:6px 4px; transition:.18s var(--ease); white-space:nowrap}
+.seg-edit:hover{color:var(--ink)}
+.hempty{
+  background:var(--surface); border-radius:var(--radius-s); padding:26px 20px; text-align:center;
+  box-shadow:0 1px 2px rgba(16,16,20,.04);
+}
+.hempty p{font-size:14.5px; color:var(--ink-2); margin-bottom:14px}
+.hempty button{padding:10px 18px; border-radius:100px; background:var(--ink); color:#fff; font-size:14px}
+
+/* ─── окно избранного ───────────────────────────────────── */
+.ob-card--wide{max-width:560px}
+.fav-list{max-height:min(46vh,380px); overflow-y:auto; margin:4px -6px 18px; padding:0 6px; overscroll-behavior:contain}
+.fav-group{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin:14px 0 6px 2px}
+.fav-group:first-child{margin-top:4px}
+.fav-item{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 11px;
+  border-radius:11px; transition:.15s var(--ease);
+}
+.fav-item:hover{background:var(--surface-2)}
+.fav-box{
+  width:19px; height:19px; flex:none; border-radius:6px; border:1.5px solid var(--line);
+  display:grid; place-items:center; transition:.15s var(--ease);
+}
+.fav-item[aria-pressed="true"] .fav-box{background:var(--ink); border-color:var(--ink)}
+.fav-box svg{opacity:0; transition:.15s var(--ease)}
+.fav-item[aria-pressed="true"] .fav-box svg{opacity:1}
+.fav-item > span:last-child{font-size:14.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.fav-item em{font-style:normal; color:var(--ink-3); font-size:12.5px; margin-left:6px}
+.fav-actions{display:grid; grid-template-columns:1fr 1.6fr; gap:8px}
+.ob-submit--ghost{background:var(--surface-2); color:var(--ink-2)}
+.ob-submit--ghost:hover{background:#F0F0EB}
+
 /* ─── гормоны ───────────────────────────────────────────── */
 .hormones{margin-bottom:34px}
 .hgroup{margin-bottom:22px}
@@ -202,6 +259,7 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .hcard.is-flat{opacity:.55}
 .hcard.is-flat:hover{opacity:1}
 .hname{font-size:15px; font-weight:500; letter-spacing:-.015em; line-height:1.25; min-width:0}
+.hstar{color:var(--ink-3); font-size:11px; margin-left:5px; vertical-align:1px}
 .hrole{display:block; font-size:11.5px; color:var(--ink-3); font-weight:400; letter-spacing:0; margin-top:1px;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .hbar{position:relative; width:104px; height:7px; flex:none}
@@ -243,7 +301,12 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 }
 .detail[hidden]{display:none}
 .detail-close[hidden]{display:none}
-.detail-close{position:absolute; top:12px; right:12px; width:28px; height:28px; border-radius:50%; color:var(--ink-3); font-size:12px; display:none; place-items:center}
+.detail-close{
+  position:absolute; top:12px; right:12px; width:30px; height:30px; border-radius:50%;
+  color:var(--ink-3); font-size:12px; display:grid; place-items:center; z-index:2;
+  background:var(--surface); transition:.15s var(--ease);
+}
+.detail-close:hover{background:var(--surface-2); color:var(--ink)}
 .detail-head{margin-bottom:12px; padding-right:24px}
 .detail-name{font-size:21px; letter-spacing:-.03em}
 .detail-latin{font-size:12px; color:var(--ink-3); font-family:"Geist Mono",monospace; margin-top:2px}
@@ -257,6 +320,13 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .detail-sec{margin-bottom:12px}
 .detail-sec h4{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); font-weight:400; margin:0 0 4px}
 .detail-sec p{font-size:13.5px; line-height:1.5; color:var(--ink-2); text-wrap:pretty}
+.detail-fav{
+  display:inline-flex; align-items:center; gap:7px; width:100%; justify-content:center;
+  padding:11px; border-radius:12px; background:var(--surface-2); color:var(--ink-2);
+  font-size:13.5px; margin-bottom:13px; transition:.16s var(--ease);
+}
+.detail-fav:hover{background:#F0F0EB; color:var(--ink)}
+.detail-fav[aria-pressed="true"]{background:var(--ink); color:#fff}
 .detail-base{font-size:12.5px; line-height:1.45; color:var(--ink-3); padding-top:11px; border-top:1px solid var(--line-soft)}
 .detail-base b{color:var(--ink-2); font-weight:500}
 .scrim{position:fixed; inset:0; z-index:45; background:rgba(14,14,16,.28); animation:fade .2s}
@@ -281,11 +351,17 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   .stat-sub{display:inline; margin:0 0 0 6px; font-size:11.5px}
   .stat > div{text-align:right; min-width:0}
   .timeline{padding:15px 13px 12px; border-radius:17px}
-  .chart{height:190px}
+  .chart{height:214px}
   .hgrid{grid-template-columns:1fr}
   .hcard{padding:11px 13px; gap:10px}
   .hbar{width:80px}
   .recovery{padding:20px 16px}
+  .hfilter{margin-bottom:12px}
+  .seg-btn{padding:6px 11px; font-size:13px}
+  .reset span{display:none}
+  .time-caption{display:none}
+  .reset{padding:7px; width:30px; justify-content:center}
+  .fav-actions{grid-template-columns:1fr 1fr}
   .detail{
     left:0 !important; right:0; bottom:0; top:auto !important; width:100%;
     border-radius:22px 22px 0 0; padding:20px 18px calc(22px + env(safe-area-inset-bottom));

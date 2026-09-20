@@ -1,5 +1,5 @@
 import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES } from './situations.js';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES } from './situations.js';
 import { SEXES, AGES, profileFactors, baseline } from './profile.js';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
@@ -8,6 +8,7 @@ import {
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
+const FAV_STORE = 'hormones.favourites.v1';
 const RESTORATIVE = new Set(['sleep', 'morninglight', 'meditation', 'hug']);
 const isTouch = matchMedia('(hover: none)').matches;
 const isSheet = () => matchMedia('(max-width: 720px)').matches;
@@ -16,7 +17,57 @@ const state = {
   sex: null, age: null, cat: 'bond', sit: 'sex',
   t: 0, scenario: null, factors: null,
   active: null, pinned: null, playing: false, raf: 0,
+  fav: new Set(), favOnly: false, hideTimer: 0,
 };
+
+/* ─── избранное ─────────────────────────────────────────── */
+
+function loadFav() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FAV_STORE) || '[]');
+    state.fav = new Set(raw.filter(id => HORMONE_BY_ID[id]));
+  } catch { state.fav = new Set(); }
+}
+function saveFav() {
+  try { localStorage.setItem(FAV_STORE, JSON.stringify([...state.fav])); } catch {}
+}
+function toggleFav(id) {
+  if (state.fav.has(id)) state.fav.delete(id); else state.fav.add(id);
+  saveFav();
+  syncFavUI();
+  renderHormones();
+}
+function syncFavUI() {
+  $('favCount').textContent = state.fav.size;
+  const empty = state.fav.size === 0;
+  if (empty && state.favOnly) state.favOnly = false;
+  $('segAll').setAttribute('aria-selected', !state.favOnly);
+  $('segFav').setAttribute('aria-selected', state.favOnly);
+  const btn = $('detailFav');
+  if (btn) {
+    const on = state.fav.has(btn.dataset.h);
+    btn.setAttribute('aria-pressed', on);
+    btn.querySelector('span').textContent = on ? 'В избранном' : 'Добавить в избранное';
+  }
+}
+
+function renderFavModal() {
+  const host = $('favList'); host.innerHTML = '';
+  GROUPS.forEach(g => {
+    const title = document.createElement('p');
+    title.className = 'fav-group'; title.textContent = g.title;
+    host.appendChild(title);
+    HORMONES.filter(h => h.group === g.id).forEach(h => {
+      const b = document.createElement('button');
+      b.className = 'fav-item'; b.type = 'button';
+      b.setAttribute('aria-pressed', state.fav.has(h.id));
+      b.innerHTML = `<span class="fav-box"><svg width="11" height="9" viewBox="0 0 11 9" aria-hidden="true"><path d="M1 4.6L4 7.5 10 1.3" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>${h.name}<em>${h.role.toLowerCase()}</em></span>`;
+      b.onclick = () => { toggleFav(h.id); b.setAttribute('aria-pressed', state.fav.has(h.id)); };
+      host.appendChild(b);
+    });
+  });
+}
 
 /* ─── профиль ───────────────────────────────────────────── */
 
@@ -61,6 +112,8 @@ function buildOnboarding() {
   $('obClose').onclick = closeOnboarding;
 }
 function openOnboarding() { buildOnboarding(); $('onboarding').hidden = false; }
+function openFavModal() { closeDetail(); renderFavModal(); $('favModal').hidden = false; }
+function closeFavModal() { $('favModal').hidden = true; }
 function closeOnboarding() { $('onboarding').hidden = true; }
 
 function applyProfile() {
@@ -90,7 +143,14 @@ function renderCats() {
 
 function renderChips() {
   const host = $('chips'); host.innerHTML = '';
+  let sub = null;
   SITUATIONS.filter(s => s.cat === state.cat).forEach(s => {
+    if (s.sub && s.sub !== sub) {           // подразделы внутри категории: зал, велосипед, плавание
+      sub = s.sub;
+      const sep = document.createElement('span');
+      sep.className = 'chip-sub'; sep.textContent = sub; sep.setAttribute('aria-hidden', 'true');
+      host.appendChild(sep);
+    }
     const b = document.createElement('button');
     b.className = 'chip'; b.type = 'button'; b.role = 'tab';
     b.textContent = s.name;
@@ -182,9 +242,19 @@ function renderRecovery(sit) {
 function renderHormones() {
   const sc = state.scenario;
   const host = $('hormones'); host.innerHTML = '';
+  syncFavUI();
+
+  if (state.favOnly && state.fav.size === 0) {
+    host.innerHTML = `<div class="hempty"><p>Пока ничего не отмечено. Выберите гормоны, за которыми следите, — и этот список будет короче.</p>
+      <button type="button" id="hemptyBtn">Настроить избранные</button></div>`;
+    $('hemptyBtn').onclick = openFavModal;
+    return;
+  }
+
   GROUPS.forEach(g => {
-    const list = HORMONES.filter(h => h.group === g.id)
+    const list = HORMONES.filter(h => h.group === g.id && (!state.favOnly || state.fav.has(h.id)))
       .sort((a, b) => (sc.byId[b.id] ? amplitude(sc.byId[b.id]) : -1) - (sc.byId[a.id] ? amplitude(sc.byId[a.id]) : -1));
+    if (!list.length) return;
     const wrap = document.createElement('div');
     wrap.className = 'hgroup';
     wrap.innerHTML = `<h2 class="hgroup-title">${g.title}</h2><div class="hgrid"></div>`;
@@ -193,22 +263,27 @@ function renderHormones() {
     host.appendChild(wrap);
   });
   paintLevels();
+  /* после перерисовки списка подсветка активного гормона должна остаться */
+  if (state.active) {
+    document.querySelectorAll('.hcard').forEach(c => c.classList.toggle('is-active', c.dataset.h === state.active));
+  }
 }
 
 function hormoneCard(h) {
   const b = document.createElement('button');
   b.className = 'hcard'; b.type = 'button'; b.dataset.h = h.id;
   b.innerHTML = `
-    <span class="hname">${h.name}<span class="hrole">${h.role}</span></span>
+    <span class="hname">${h.name}${state.fav.has(h.id) ? '<span class="hstar">★</span>' : ''}<span class="hrole">${h.role}</span></span>
     <span class="hbar"><span class="hbar-track"></span><span class="hbar-fill"></span><span class="hbar-mid"></span></span>
     <span class="hval mono">норма</span>`;
   if (!isTouch) {
     b.addEventListener('mouseenter', () => {
       if (state.pinned) return;
+      clearTimeout(state.hideTimer);
       setActive(h.id);
       if (!isSheet()) showDetail(h.id, b);   // на узком экране лист выезжает только по клику
     });
-    b.addEventListener('mouseleave', () => { if (!state.pinned && !isSheet()) { setActive(null); hideDetail(); } });
+    b.addEventListener('mouseleave', () => { if (!state.pinned && !isSheet()) scheduleHide(); });
   }
   b.addEventListener('click', () => {
     if (state.pinned === h.id) { state.pinned = null; setActive(null); hideDetail(); }
@@ -247,14 +322,15 @@ function setActive(id) {
   const sc = state.scenario;
   const lead = id && sc.byId[id] ? id : sc.effects[0].id;
   const name = HORMONE_BY_ID[lead].name.toLowerCase();
+  const legend = 'Светлая зона слева — пока идёт само событие, засечки сверху — его этапы.';
   $('chartNote').textContent = (id && sc.byId[id])
-    ? `Выделен ${name}. Серые линии — остальные затронутые гормоны.`
-    : `Каждая линия — гормон, выделен ${name}: он отклоняется сильнее всех. Тяните по графику, чтобы отмотать время, или наведите на гормон в списке ниже.`;
+    ? `Выделен ${name}. Серые линии — остальные затронутые гормоны. ${legend}`
+    : `Каждая линия — гормон, выделен ${name}: он отклоняется сильнее всех. ${legend} Тяните по графику, чтобы отмотать время.`;
 }
 
 /* ─── график ────────────────────────────────────────────── */
 
-const PAD = { l: 36, r: 10, t: 14, b: 18 };
+const PAD = { l: 36, r: 10, t: 42, b: 18 };
 
 function drawChart() {
   const host = $('chart');
@@ -282,6 +358,35 @@ function drawChart() {
   const yOf = (v) => PAD.t + (hi - v) / (hi - lo) * ph;
   const path = (pts) => pts.map((p, i) => (i ? 'L' : 'M') + xOf(p[0]).toFixed(1) + ' ' + yOf(p[1]).toFixed(1)).join(' ');
 
+  /* Светлая зона — пока идёт само событие; метки сверху — его этапы. */
+  const ph_ = PHASES[state.sit];
+  let spanRect = '', marks = '';
+  if (ph_ && ph_.span > 0) {
+    const x2 = xOf(toLog(Math.min(ph_.span, H), H));
+    spanRect = `<rect x="${PAD.l}" y="${PAD.t}" width="${(x2 - PAD.l).toFixed(1)}" height="${ph}" fill="#F1F1EC"/>`;
+  }
+  if (ph_) {
+    /* Два яруса подписей: на узком экране иначе выживает одна метка из трёх. */
+    const rowY = [PAD.t - 29, PAD.t - 13];
+    const lastR = [-1e9, -1e9];
+    ph_.marks.forEach((mk, i) => {
+      if (mk.t > H) return;
+      const x = xOf(toLog(mk.t, H));
+      const est = mk.l.length * 4.95;
+      const anchor = x + est > w - PAD.r ? 'end' : 'start';
+      const tx = anchor === 'end' ? x - 5 : x + 5;
+      const left = anchor === 'end' ? tx - est : tx;
+      let row = i % 2;
+      if (left < lastR[row] + 7) row = 1 - row;
+      if (left < lastR[row] + 7) return;
+      lastR[row] = left + est;
+      const y = rowY[row];
+      marks += `<line x1="${x.toFixed(1)}" y1="${(y + 4).toFixed(1)}" x2="${x.toFixed(1)}" y2="${PAD.t + ph}" stroke="#DCDCD5" stroke-width="1"/>
+        <circle cx="${x.toFixed(1)}" cy="${(y + 4).toFixed(1)}" r="1.8" fill="#C2C2BA"/>
+        <text x="${tx.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-size="9" fill="#83837B">${mk.l}</text>`;
+    });
+  }
+
   const gridVals = [4, 3, 2, 1, 0, -1, -2].filter(v => v > lo + 0.05 && v < hi - 0.05);
   const grid = gridVals.map(v => {
     const y = yOf(v).toFixed(1);
@@ -303,18 +408,22 @@ function drawChart() {
   const base = curves.filter(c => c.e.id !== activeId)
     .map(c => `<path d="${path(c.pts)}" fill="none" stroke="#C9C9C1" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>`).join('');
 
-  let top = '';
+  let top = '', topLabel = '';
   const hiC = curves.find(c => c.e.id === activeId);
   if (hiC) {
     const far = hiC.pts.reduce((a, b) => (Math.abs(b[1]) > Math.abs(a[1]) ? b : a));
     const up = far[1] >= 0;
     const color = up ? 'var(--up)' : 'var(--down)';
-    const lx = Math.min(w - PAD.r - 6, Math.max(PAD.l + 4, xOf(far[0])));
-    const anchor = lx > w - 90 ? 'end' : 'start';
-    top = `<path d="${path(hiC.pts)}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="${(anchor === 'end' ? lx - 8 : lx + 8).toFixed(1)}" y="${Math.max(PAD.t + 9, Math.min(PAD.t + ph - 4, yOf(far[1]) + (up ? -9 : 15))).toFixed(1)}"
+    const name = HORMONE_BY_ID[hiC.e.id].name;
+    const est = name.length * 6.4;
+    let lx = xOf(far[0]) + 11;
+    let anchor = 'start';
+    if (lx + est > w - PAD.r) { anchor = 'end'; lx = xOf(far[0]) - 11; }
+    lx = Math.max(PAD.l + (anchor === 'end' ? est : 0) + 4, Math.min(w - PAD.r - 4, lx));
+    top = `<path d="${path(hiC.pts)}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    topLabel = `<text x="${lx.toFixed(1)}" y="${Math.max(PAD.t + 10, Math.min(PAD.t + ph - 4, yOf(far[1]) + (up ? -10 : 16))).toFixed(1)}"
         text-anchor="${anchor}" font-size="11.5" font-weight="500" fill="${color}"
-        stroke="#fff" stroke-width="3.5" paint-order="stroke">${HORMONE_BY_ID[hiC.e.id].name}</text>`;
+        stroke="#fff" stroke-width="3.5" paint-order="stroke">${name}</text>`;
   }
 
   const u = toLog(state.t, H);
@@ -328,7 +437,7 @@ function drawChart() {
   }).join('');
 
   host.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">
-    ${xa}${grid}${base}${top}${head}${dots}</svg>`;
+    ${spanRect}${xa}${grid}${marks}${base}${top}${head}${dots}${topLabel}</svg>`;
 }
 
 /* ─── время ─────────────────────────────────────────────── */
@@ -424,11 +533,15 @@ function showDetail(id, anchor) {
       <span class="detail-now-l" id="detailNowL">${eff ? 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t)) : 'в этом сценарии не меняется'}</span>
     </div>
     ${eff && eff.note ? `<p class="detail-note">${eff.note}</p>` : ''}
+    <button class="detail-fav" id="detailFav" type="button" data-h="${id}" aria-pressed="${state.fav.has(id)}">
+      <span aria-hidden="true">★</span><span>${state.fav.has(id) ? 'В избранном' : 'Добавить в избранное'}</span>
+    </button>
     <div class="detail-sec"><h4>За что отвечает</h4><p>${h.what}</p></div>
     <div class="detail-sec"><h4>Где и как вырабатывается</h4><p>${h.where}</p></div>
     <div class="detail-sec"><h4>Как поддерживать</h4><p>${h.support}</p></div>
     ${base ? `<p class="detail-base"><b>Ваш базовый фон:</b> ≈${Math.round(base.value * 100)}% от пикового уровня молодости (${sexTitle} пол, ${ageTitle}). ${base.note}</p>` : ''}
   `;
+  $('detailFav').onclick = (ev) => { ev.stopPropagation(); toggleFav(id); };
   const d = $('detail');
   d.hidden = false;
   if (isSheet()) {
@@ -452,8 +565,21 @@ function updateDetailNow() {
   l.textContent = 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t));
 }
 function hideDetail() {
+  clearTimeout(state.hideTimer);
   $('detail').hidden = true;
   $('scrim').hidden = true;
+}
+/* Пауза перед закрытием: курсор успевает дойти от карточки до окна. */
+function scheduleHide() {
+  clearTimeout(state.hideTimer);
+  state.hideTimer = setTimeout(() => {
+    if (!state.pinned) { setActive(null); hideDetail(); }
+  }, 240);
+}
+function closeDetail() {
+  state.pinned = null;
+  setActive(null);
+  hideDetail();
 }
 
 /* ─── события ───────────────────────────────────────────── */
@@ -462,8 +588,32 @@ function bind() {
   $('profileBtn').onclick = openOnboarding;
   $('playBtn').onclick = () => (state.playing ? stopPlay() : startPlay());
   $('scrub').oninput = (e) => { stopPlay(); updateTime(invLog(e.target.value / 1000, state.scenario.horizon)); };
-  $('detailClose').onclick = () => { state.pinned = null; setActive(null); hideDetail(); };
-  $('scrim').onclick = () => { state.pinned = null; setActive(null); hideDetail(); };
+  $('detailClose').onclick = closeDetail;
+  $('scrim').onclick = closeDetail;
+
+  $('resetBtn').onclick = () => { stopPlay(); closeDetail(); updateTime(peakMoment(state.scenario)); };
+
+  $('segAll').onclick = () => { state.favOnly = false; renderHormones(); };
+  $('segFav').onclick = () => {
+    if (state.fav.size === 0) { openFavModal(); return; }
+    state.favOnly = true; renderHormones();
+  };
+  $('favEdit').onclick = openFavModal;
+  $('favClose').onclick = closeFavModal;
+  $('favDone').onclick = closeFavModal;
+  $('favClear').onclick = () => { state.fav.clear(); saveFav(); renderFavModal(); syncFavUI(); renderHormones(); };
+  $('favModal').addEventListener('click', (e) => { if (e.target === $('favModal')) closeFavModal(); });
+
+  const det = $('detail');
+  det.addEventListener('mouseenter', () => clearTimeout(state.hideTimer));
+  det.addEventListener('mouseleave', () => { if (!state.pinned) scheduleHide(); });
+
+  /* клик по любому свободному месту закрывает окно гормона */
+  document.addEventListener('click', (e) => {
+    if ($('detail').hidden) return;
+    if (e.target.closest('#detail') || e.target.closest('.hcard')) return;
+    closeDetail();
+  });
 
   const wrap = document.querySelector('.chart-wrap');
   let dragging = false;
@@ -477,7 +627,7 @@ function bind() {
   wrap.addEventListener('mouseleave', hideTip);
 
   addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { state.pinned = null; setActive(null); hideDetail(); closeOnboarding(); }
+    if (e.key === 'Escape') { closeDetail(); closeOnboarding(); closeFavModal(); }
   });
 
   let rt;
@@ -499,6 +649,7 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1]
   state.sex = fromLink[0]; state.age = fromLink[1]; saveProfile();
 }
 
+loadFav();
 bind();
 if (state.sex || loadProfile()) {
   applyProfile();
