@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Гормональная карта — что происходит с телом в разных ситуациях</title>
+<meta name="description" content="Интерактивная карта гормональной системы: 21 гормон, 26 жизненных сценариев. Видно, что поднимается, что падает и сколько времени нужно системе, чтобы вернуться к норме.">
+<meta name="theme-color" content="#F5F5F3">
+<meta property="og:title" content="Гормональная карта">
+<meta property="og:description" content="21 гормон, 26 сценариев: секс, расставание, недосып, алкоголь, конфликт, холод. Что меняется и когда вернётся к норме.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+</head>
+<body>
+
+<div class="onboarding" id="onboarding" hidden>
+  <div class="ob-card">
+    <button class="ob-close" id="obClose" hidden aria-label="Закрыть">✕</button>
+    <p class="ob-eyebrow">Настройка один раз</p>
+    <h2 class="ob-title">Гормональная карта</h2>
+    <p class="ob-lead">Реакция системы зависит от пола и возраста. Укажите свои — дальше всё будет считаться под вас.</p>
+
+    <div class="ob-block">
+      <span class="ob-label">Пол</span>
+      <div class="ob-options" id="obSex" role="radiogroup" aria-label="Пол"></div>
+    </div>
+
+    <div class="ob-block">
+      <span class="ob-label">Возраст</span>
+      <div class="ob-options ob-options--age" id="obAge" role="radiogroup" aria-label="Возраст"></div>
+    </div>
+
+    <button class="ob-submit" id="obSubmit" disabled>Смотреть карту</button>
+    <p class="ob-foot">Потом можно поменять в правом верхнем углу. Ничего не отправляется на сервер — выбор хранится только в вашем браузере.</p>
+  </div>
+</div>
+
+<header class="topbar">
+  <a class="wordmark" href="./" aria-label="Гормональная карта">
+    <span class="wordmark-dot" aria-hidden="true"></span>Гормональная карта
+  </a>
+  <button class="profile-pill" id="profileBtn" aria-label="Изменить пол и возраст">
+    <span id="profileText">—</span>
+    <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</header>
+
+<nav class="picker" aria-label="Выбор ситуации">
+  <div class="cats" id="cats" role="tablist" aria-label="Категории"></div>
+  <div class="chips" id="chips" role="tablist" aria-label="Ситуации"></div>
+</nav>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow" id="sitTag"></p>
+    <h1 id="sitName"></h1>
+    <p class="blurb" id="sitBlurb"></p>
+  </section>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="timeline" aria-label="Динамика во времени">
+    <div class="time-head">
+      <button class="play" id="playBtn" aria-label="Проиграть сценарий">
+        <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path id="playIcon" d="M4.5 3.2v9.6l8-4.8z" fill="currentColor"/></svg>
+      </button>
+      <div class="time-readout">
+        <span class="time-value" id="timeValue">0</span>
+        <span class="time-caption" id="timeCaption">от начала события</span>
+      </div>
+      <div class="time-load" id="timeLoad"></div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart" id="chart" role="img" aria-label="График отклонения гормонов от нормы во времени"></div>
+      <div class="chart-tip" id="chartTip" hidden></div>
+    </div>
+
+    <input class="scrub" id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Время после события">
+    <p class="chart-note" id="chartNote"></p>
+  </section>
+
+  <section class="hormones" id="hormones" aria-label="Гормоны"></section>
+
+  <section class="recovery">
+    <h2 class="recovery-title">Сколько ждать возврата к норме</h2>
+    <p class="recovery-text" id="recoveryText"></p>
+    <div class="recovery-list" id="recoveryList"></div>
+  </section>
+
+  <footer class="foot">
+    <p class="foot-warn">Это справочная модель, а не диагностика. Цифры — усреднённые ориентиры из исследований, показанные как отклонение от вашей личной нормы: реальные значения сильно различаются у разных людей, в разные дни и на разных фазах цикла. Не используйте это для решений о здоровье, лекарствах или веществах — для этого есть врач и анализы.</p>
+    <p class="foot-meta">21 гормон · 26 сценариев · <a href="https://github.com/kvlllvd/hormones">исходники на GitHub</a></p>
+  </footer>
+</main>
+
+<div class="detail" id="detail" hidden role="dialog" aria-label="Описание гормона">
+  <button class="detail-close" id="detailClose" aria-label="Закрыть">✕</button>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+<div class="scrim" id="scrim" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+:root{
+  --bg:#F4F4F1;
+  --surface:#FFFFFF;
+  --surface-2:#FAFAF8;
+  --ink:#0E0E10;
+  --ink-2:#56565E;
+  --ink-3:#7B7B82;
+  --line:#E4E4DE;
+  --line-soft:#EDEDE8;
+  --up:#C0402A;
+  --up-soft:#F4E3DF;
+  --down:#2E63A6;
+  --down-soft:#DFE7F2;
+  --flat:#B8B8B2;
+  --radius:20px;
+  --radius-s:12px;
+  --shadow:0 1px 2px rgba(16,16,20,.04), 0 12px 32px -18px rgba(16,16,20,.18);
+  --ease:cubic-bezier(.22,.7,.2,1);
+  --pad:20px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Geist","Helvetica Neue",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-weight:400; font-size:16px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+h1,h2,h3{margin:0; font-weight:500; letter-spacing:-.025em}
+p{margin:0}
+button{font:inherit; color:inherit; border:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent}
+a{color:inherit}
+.mono{font-family:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums}
+
+main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
+
+/* ─── онбординг ─────────────────────────────────────────── */
+.onboarding{
+  position:fixed; inset:0; z-index:60; display:grid; place-items:center;
+  padding:var(--pad); background:rgba(244,244,241,.82); backdrop-filter:blur(24px) saturate(1.4);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+  animation:fade .4s var(--ease);
+}
+.onboarding[hidden]{display:none}
+.ob-card{
+  position:relative; width:100%; max-width:440px; background:var(--surface);
+  border-radius:28px; padding:36px 28px 24px; box-shadow:var(--shadow);
+  animation:rise .5s var(--ease) both;
+}
+.ob-close[hidden]{display:none}
+.ob-close{position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%; color:var(--ink-3); font-size:13px; display:grid; place-items:center}
+.ob-close:hover{background:var(--surface-2); color:var(--ink)}
+.ob-eyebrow{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+.ob-title{font-size:30px; margin:6px 0 10px; letter-spacing:-.035em}
+.ob-lead{color:var(--ink-2); font-size:15px; margin-bottom:26px; text-wrap:pretty}
+.ob-block{margin-bottom:20px}
+.ob-label{display:block; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-bottom:10px}
+.ob-options{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.ob-options--age{grid-template-columns:repeat(3,1fr)}
+.ob-opt{
+  padding:13px 8px; border-radius:14px; background:var(--surface-2);
+  border:1.5px solid transparent; font-size:15px; transition:.18s var(--ease);
+  text-align:center;
+}
+.ob-opt:hover{background:#F2F2EE}
+.ob-opt[aria-checked="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.ob-submit{
+  width:100%; margin-top:8px; padding:15px; border-radius:15px; background:var(--ink); color:#fff;
+  font-size:16px; font-weight:500; transition:.18s var(--ease);
+}
+.ob-submit:disabled{background:var(--line); color:var(--ink-3); cursor:not-allowed}
+.ob-submit:not(:disabled):hover{transform:translateY(-1px)}
+.ob-foot{margin-top:16px; font-size:12px; line-height:1.45; color:var(--ink-3); text-align:center}
+
+/* ─── шапка ─────────────────────────────────────────────── */
+.topbar{
+  position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:14px var(--pad); max-width:1080px; margin:0 auto;
+  background:rgba(244,244,241,.8); backdrop-filter:blur(20px) saturate(1.6);
+  -webkit-backdrop-filter:blur(20px) saturate(1.6);
+}
+.wordmark{
+  display:inline-flex; align-items:center; gap:9px; font-size:15px; font-weight:500;
+  letter-spacing:-.02em; text-decoration:none; white-space:nowrap;
+}
+.wordmark-dot{width:9px; height:9px; border-radius:50%; background:var(--up); flex:none; animation:pulse 3.6s var(--ease) infinite}
+.profile-pill{
+  display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:100px;
+  background:var(--surface); box-shadow:0 1px 2px rgba(16,16,20,.06); font-size:13.5px;
+  color:var(--ink-2); transition:.18s var(--ease); white-space:nowrap;
+}
+.profile-pill:hover{color:var(--ink); transform:translateY(-1px)}
+
+/* ─── выбор ситуации ────────────────────────────────────── */
+.picker{
+  position:sticky; top:52px; z-index:35; padding:6px 0 12px;
+  background:linear-gradient(var(--bg) 72%, rgba(244,244,241,0));
+}
+.cats,.chips{
+  display:flex; gap:6px; overflow-x:auto; scrollbar-width:none;
+  padding:4px var(--pad); max-width:1080px; margin:0 auto;
+  scroll-snap-type:x proximity;
+}
+.cats::-webkit-scrollbar,.chips::-webkit-scrollbar{display:none}
+.cat{
+  flex:none; padding:6px 12px; border-radius:100px; font-size:13.5px; color:var(--ink-3);
+  transition:.18s var(--ease); scroll-snap-align:start; white-space:nowrap;
+}
+.cat:hover{color:var(--ink)}
+.cat[aria-selected="true"]{color:var(--ink); background:rgba(14,14,16,.06)}
+.chip{
+  flex:none; padding:9px 15px; border-radius:100px; font-size:14.5px; background:var(--surface);
+  color:var(--ink-2); box-shadow:0 1px 2px rgba(16,16,20,.05); transition:.2s var(--ease);
+  scroll-snap-align:start; white-space:nowrap;
+}
+.chip:hover{color:var(--ink); transform:translateY(-1px)}
+.chip[aria-selected="true"]{background:var(--ink); color:#fff; box-shadow:0 4px 14px -6px rgba(16,16,20,.5)}
+
+/* ─── герой ─────────────────────────────────────────────── */
+.hero{padding:22px 0 0; max-width:720px}
+.eyebrow{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; margin:8px 0 14px}
+.blurb{font-size:clamp(15px,3.6vw,18px); line-height:1.5; color:var(--ink-2); text-wrap:pretty}
+
+/* ─── показатели ────────────────────────────────────────── */
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:26px 0 8px}
+.stat{background:var(--surface); border-radius:var(--radius-s); padding:14px 14px 13px; box-shadow:0 1px 2px rgba(16,16,20,.04)}
+.stat-label{display:block; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-bottom:7px}
+.stat-value{display:block; font-size:clamp(17px,4.2vw,23px); font-weight:500; letter-spacing:-.03em; line-height:1.1}
+.stat-sub{display:block; font-size:12px; color:var(--ink-3); margin-top:4px; line-height:1.3}
+
+/* ─── таймлайн ──────────────────────────────────────────── */
+.timeline{
+  background:var(--surface); border-radius:var(--radius); padding:18px 16px 14px;
+  margin:12px 0 28px; box-shadow:var(--shadow);
+}
+.time-head{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+.play{
+  width:34px; height:34px; flex:none; border-radius:50%; background:var(--ink); color:#fff;
+  display:grid; place-items:center; transition:.18s var(--ease);
+}
+.play:hover{transform:scale(1.06)}
+.time-readout{display:flex; align-items:baseline; gap:8px; min-width:0; flex:1}
+.time-value{
+  font-family:"Geist Mono",monospace; font-variant-numeric:tabular-nums;
+  font-size:clamp(18px,4.4vw,22px); font-weight:500; letter-spacing:-.03em; white-space:nowrap;
+}
+.time-caption{font-size:12.5px; color:var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.time-load{font-size:12px; color:var(--ink-3); white-space:nowrap; font-family:"Geist Mono",monospace}
+
+.chart-wrap{position:relative; touch-action:pan-y}
+.chart{width:100%; height:232px; cursor:crosshair; user-select:none}
+.chart svg{display:block; width:100%; height:100%; overflow:visible}
+.chart-tip{
+  position:absolute; z-index:5; pointer-events:none; background:var(--ink); color:#fff;
+  border-radius:10px; padding:8px 10px; font-size:12px; line-height:1.45; white-space:nowrap;
+  box-shadow:0 8px 24px -10px rgba(0,0,0,.4); transform:translate(-50%,-115%); transition:opacity .15s;
+}
+.chart-tip b{font-weight:500}
+.chart-tip .tip-row{display:flex; justify-content:space-between; gap:12px}
+.chart-tip .tip-v{font-family:"Geist Mono",monospace; opacity:.85}
+
+.scrub{
+  -webkit-appearance:none; appearance:none; height:26px; background:transparent;
+  display:block; cursor:grab;
+  /* совпадает с полем построения графика, чтобы ползунок шёл ровно по линии времени */
+  width:calc(100% - 46px); margin:2px 10px 0 36px;
+}
+.scrub:active{cursor:grabbing}
+.scrub::-webkit-slider-runnable-track{height:4px; border-radius:3px; background:var(--line)}
+.scrub::-moz-range-track{height:4px; border-radius:3px; background:var(--line)}
+.scrub::-webkit-slider-thumb{
+  -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--surface);
+  border:1.5px solid var(--line); box-shadow:0 2px 8px -2px rgba(16,16,20,.3); margin-top:-9px;
+  transition:transform .15s var(--ease);
+}
+.scrub::-moz-range-thumb{
+  width:22px; height:22px; border:1.5px solid var(--line); border-radius:50%; background:var(--surface);
+  box-shadow:0 2px 8px -2px rgba(16,16,20,.3);
+}
+.scrub:active::-webkit-slider-thumb{transform:scale(1.12)}
+.scrub:focus-visible::-webkit-slider-thumb{border-color:var(--ink)}
+.chart-note{font-size:12px; color:var(--ink-3); margin-top:6px; line-height:1.4; text-wrap:pretty}
+
+/* ─── гормоны ───────────────────────────────────────────── */
+.hormones{margin-bottom:34px}
+.hgroup{margin-bottom:22px}
+.hgroup-title{
+  font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3);
+  margin:0 0 9px 2px; font-weight:400;
+}
+.hgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(352px,1fr)); gap:6px}
+.hcard{
+  display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:12px;
+  background:var(--surface); border-radius:13px; padding:12px 14px; text-align:left; width:100%;
+  box-shadow:0 1px 2px rgba(16,16,20,.04); transition:.2s var(--ease); position:relative;
+}
+.hcard:hover,.hcard.is-active{box-shadow:0 1px 2px rgba(16,16,20,.06), 0 10px 24px -14px rgba(16,16,20,.4); transform:translateY(-1px)}
+.hcard.is-active{outline:1.5px solid var(--ink); outline-offset:-1.5px}
+.hcard.is-flat{opacity:.55}
+.hcard.is-flat:hover{opacity:1}
+.hname{font-size:15px; font-weight:500; letter-spacing:-.015em; line-height:1.25; min-width:0}
+.hrole{display:block; font-size:11.5px; color:var(--ink-3); font-weight:400; letter-spacing:0; margin-top:1px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.hbar{position:relative; width:104px; height:7px; flex:none}
+.hbar-track{position:absolute; inset:0; border-radius:4px; background:var(--line-soft)}
+.hbar-mid{position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--flat); opacity:.55}
+.hbar-fill{
+  position:absolute; top:0; height:7px; border-radius:4px;
+  transition:left .45s var(--ease), width .45s var(--ease), background-color .3s var(--ease);
+}
+.hval{
+  font-family:"Geist Mono",monospace; font-variant-numeric:tabular-nums; font-size:12.5px;
+  width:56px; text-align:right; color:var(--ink-2); transition:color .3s var(--ease);
+  white-space:nowrap;
+}
+.hval.up{color:var(--up)} .hval.down{color:var(--down)} .hval.flat{color:var(--ink-3)}
+
+/* ─── восстановление ────────────────────────────────────── */
+.recovery{background:var(--surface); border-radius:var(--radius); padding:24px 20px; margin-bottom:28px; box-shadow:var(--shadow)}
+.recovery-title{font-size:20px; margin-bottom:10px; letter-spacing:-.03em}
+.recovery-text{font-size:15px; color:var(--ink-2); line-height:1.55; max-width:660px; text-wrap:pretty}
+.recovery-list{margin-top:18px; display:grid; gap:1px; background:var(--line-soft); border-radius:12px; overflow:hidden}
+.rrow{display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--surface); padding:10px 13px}
+.rrow-name{font-size:14px}
+.rrow-name em{font-style:normal; color:var(--ink-3); font-size:12px; margin-left:7px}
+.rrow-time{font-family:"Geist Mono",monospace; font-size:12.5px; color:var(--ink-2); white-space:nowrap}
+
+/* ─── подвал ────────────────────────────────────────────── */
+.foot{padding:4px 0 44px; max-width:720px}
+.foot-warn{font-size:12.5px; line-height:1.55; color:var(--ink-3); text-wrap:pretty}
+.foot-meta{font-size:12.5px; color:var(--ink-3); margin-top:12px}
+.foot-meta a{color:var(--ink-2)}
+
+/* ─── карточка гормона ──────────────────────────────────── */
+.detail{
+  position:fixed; z-index:50; width:min(360px,calc(100vw - 32px)); background:var(--surface);
+  border-radius:18px; box-shadow:0 2px 6px rgba(16,16,20,.06), 0 28px 60px -24px rgba(16,16,20,.45);
+  padding:18px 18px 16px; max-height:min(560px,calc(100vh - 40px)); overflow-y:auto;
+  animation:pop .22s var(--ease); overscroll-behavior:contain;
+}
+.detail[hidden]{display:none}
+.detail-close[hidden]{display:none}
+.detail-close{position:absolute; top:12px; right:12px; width:28px; height:28px; border-radius:50%; color:var(--ink-3); font-size:12px; display:none; place-items:center}
+.detail-head{margin-bottom:12px; padding-right:24px}
+.detail-name{font-size:21px; letter-spacing:-.03em}
+.detail-latin{font-size:12px; color:var(--ink-3); font-family:"Geist Mono",monospace; margin-top:2px}
+.detail-now{
+  display:flex; align-items:baseline; gap:9px; padding:11px 12px; border-radius:12px;
+  background:var(--surface-2); margin-bottom:13px;
+}
+.detail-now-v{font-family:"Geist Mono",monospace; font-size:19px; font-weight:500; letter-spacing:-.02em}
+.detail-now-l{font-size:12px; color:var(--ink-3); line-height:1.35}
+.detail-note{font-size:13.5px; line-height:1.5; color:var(--ink); margin-bottom:14px; padding-left:11px; border-left:2px solid var(--line); text-wrap:pretty}
+.detail-sec{margin-bottom:12px}
+.detail-sec h4{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); font-weight:400; margin:0 0 4px}
+.detail-sec p{font-size:13.5px; line-height:1.5; color:var(--ink-2); text-wrap:pretty}
+.detail-base{font-size:12.5px; line-height:1.45; color:var(--ink-3); padding-top:11px; border-top:1px solid var(--line-soft)}
+.detail-base b{color:var(--ink-2); font-weight:500}
+.scrim{position:fixed; inset:0; z-index:45; background:rgba(14,14,16,.28); animation:fade .2s}
+.scrim[hidden]{display:none}
+
+/* ─── анимации ──────────────────────────────────────────── */
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{opacity:0; transform:translateY(14px) scale(.985)}to{opacity:1; transform:none}}
+@keyframes pop{from{opacity:0; transform:translateY(6px) scale(.98)}to{opacity:1; transform:none}}
+@keyframes pulse{0%,100%{transform:scale(1); opacity:1} 50%{transform:scale(.82); opacity:.65}}
+.fade-in{animation:fade .35s var(--ease) both}
+
+/* ─── мобильный ─────────────────────────────────────────── */
+@media (max-width:720px){
+  :root{--pad:16px}
+  .topbar{padding:11px var(--pad)}
+  .picker{top:47px}
+  .stats{grid-template-columns:1fr; gap:6px}
+  .stat{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:12px 14px}
+  .stat-label{margin:0; flex:none}
+  .stat-value{font-size:16px; text-align:right}
+  .stat-sub{display:inline; margin:0 0 0 6px; font-size:11.5px}
+  .stat > div{text-align:right; min-width:0}
+  .timeline{padding:15px 13px 12px; border-radius:17px}
+  .chart{height:190px}
+  .hgrid{grid-template-columns:1fr}
+  .hcard{padding:11px 13px; gap:10px}
+  .hbar{width:80px}
+  .recovery{padding:20px 16px}
+  .detail{
+    left:0 !important; right:0; bottom:0; top:auto !important; width:100%;
+    border-radius:22px 22px 0 0; padding:20px 18px calc(22px + env(safe-area-inset-bottom));
+    max-height:82vh; animation:sheet .3s var(--ease);
+  }
+  .detail-close{display:grid}
+  @keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
+}
+@media (hover:none){
+  .hcard:hover{transform:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important; transition-duration:.01ms !important}
+}
+:focus-visible{outline:2px solid var(--ink); outline-offset:2px; border-radius:6px}
