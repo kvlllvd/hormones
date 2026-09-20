@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=8';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES } from './situations.js?v=8';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=8';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=9';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES } from './situations.js?v=9';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=9';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=8';
+} from './engine.js?v=9';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -48,7 +48,7 @@ function syncFavUI() {
   if (btn) {
     const on = state.fav.has(btn.dataset.h);
     btn.setAttribute('aria-pressed', on);
-    btn.querySelector('span').textContent = on ? 'В избранном' : 'Добавить в избранное';
+    btn.querySelector('.detail-fav-text').textContent = on ? 'В избранном' : 'Добавить в избранное';
   }
 }
 
@@ -404,6 +404,10 @@ function drawChart() {
             <text x="${x}" y="${h - 4}" text-anchor="middle" font-size="9.5" fill="#8A8A82" font-family="Geist Mono, monospace">${formatClock(t)}</text>`;
   }).join('');
 
+  const u = toLog(state.t, H);
+  const pxN = xOf(u);
+  const px = pxN.toFixed(1);
+
   const activeId = state.active && sc.byId[state.active] ? state.active : sc.effects[0].id;
   const base = curves.filter(c => c.e.id !== activeId)
     .map(c => `<path d="${path(c.pts)}" fill="none" stroke="#C9C9C1" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>`).join('');
@@ -416,18 +420,31 @@ function drawChart() {
     const color = up ? 'var(--up)' : 'var(--down)';
     const name = HORMONE_BY_ID[hiC.e.id].name;
     const est = name.length * 6.4;
-    let lx = xOf(far[0]) + 11;
-    let anchor = 'start';
-    if (lx + est > w - PAD.r) { anchor = 'end'; lx = xOf(far[0]) - 11; }
+    const fx = xOf(far[0]);
+    /* Подпись уводим на ту сторону от пика, где не стоит точка плейхеда. */
+    const spanOf = (a) => (a === 'end' ? [fx - 11 - est, fx - 11] : [fx + 11, fx + 11 + est]);
+    const clashes = (a) => { const [l, r] = spanOf(a); return pxN > l - 7 && pxN < r + 7; };
+    const inField = (a) => { const [l, r] = spanOf(a); return l >= PAD.l + 2 && r <= w - PAD.r - 2; };
+    let anchor = inField('start') ? 'start' : 'end';
+    let stuck = clashes(anchor);
+    if (stuck) {
+      const alt = anchor === 'start' ? 'end' : 'start';
+      if (inField(alt) && !clashes(alt)) { anchor = alt; stuck = false; }
+    }
+    let lx = anchor === 'end' ? fx - 11 : fx + 11;
     lx = Math.max(PAD.l + (anchor === 'end' ? est : 0) + 4, Math.min(w - PAD.r - 4, lx));
+    /* Разойтись по горизонтали не вышло — уводим подпись по вертикали от точки. */
+    const clampY = (v) => Math.max(PAD.t + 10, Math.min(PAD.t + ph - 4, v));
+    const above = clampY(yOf(far[1]) - 10), below = clampY(yOf(far[1]) + 16);
+    const dotY = yOf(Math.log2(levelAt(hiC.e, state.t)));
+    let ly = up ? above : below;
+    if (stuck) ly = Math.abs(above - dotY) >= Math.abs(below - dotY) ? above : below;
     top = `<path d="${path(hiC.pts)}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
-    topLabel = `<text x="${lx.toFixed(1)}" y="${Math.max(PAD.t + 10, Math.min(PAD.t + ph - 4, yOf(far[1]) + (up ? -10 : 16))).toFixed(1)}"
+    topLabel = `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}"
         text-anchor="${anchor}" font-size="11.5" font-weight="500" fill="${color}"
         stroke="#fff" stroke-width="3.5" paint-order="stroke">${name}</text>`;
   }
 
-  const u = toLog(state.t, H);
-  const px = xOf(u).toFixed(1);
   let head = `<line x1="${px}" y1="${PAD.t - 4}" x2="${px}" y2="${PAD.t + ph}" stroke="#0E0E10" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`;
   const dots = [hiC, ...curves.filter(c => c !== hiC).slice(0, 3)].filter(Boolean).map(c => {
     const v = Math.log2(levelAt(c.e, state.t));
@@ -437,7 +454,7 @@ function drawChart() {
   }).join('');
 
   host.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">
-    ${spanRect}${xa}${grid}${marks}${base}${top}${head}${dots}${topLabel}</svg>`;
+    ${spanRect}${xa}${grid}${marks}${base}${top}${head}${topLabel}${dots}</svg>`;
 }
 
 /* ─── время ─────────────────────────────────────────────── */
@@ -495,17 +512,18 @@ function chartPointer(ev) {
   showTip(ev.clientX - r.left, r);
 }
 
-function showTip(x, rect) {
+function showTip(x, rect, tAt) {
   const tip = $('chartTip');
   const sc = state.scenario;
+  const t = tAt != null ? tAt : state.t;
   const rows = sc.effects
-    .map(e => ({ e, v: levelAt(e, state.t) }))
+    .map(e => ({ e, v: levelAt(e, t) }))
     .sort((a, b) => Math.abs(Math.log2(b.v)) - Math.abs(Math.log2(a.v)))
     .slice(0, 3)
     .filter(r => Math.abs(r.v - 1) > 0.03);
   if (!rows.length) { tip.hidden = true; return; }
   tip.hidden = false;
-  tip.innerHTML = `<b>${state.t < 1 ? 'момент события' : formatClock(state.t) + ' спустя'}</b>` +
+  tip.innerHTML = `<b>${t < 1 ? 'момент события' : formatClock(t) + ' спустя'}</b>` +
     rows.map(r => `<div class="tip-row"><span>${HORMONE_BY_ID[r.e.id].name}</span><span class="tip-v">${formatDelta(r.v)}</span></div>`).join('');
   const w = tip.offsetWidth;
   tip.style.left = Math.max(w / 2 + 4, Math.min(rect.width - w / 2 - 4, x)) + 'px';
@@ -534,7 +552,7 @@ function showDetail(id, anchor) {
     </div>
     ${eff && eff.note ? `<p class="detail-note">${eff.note}</p>` : ''}
     <button class="detail-fav" id="detailFav" type="button" data-h="${id}" aria-pressed="${state.fav.has(id)}">
-      <span aria-hidden="true">★</span><span>${state.fav.has(id) ? 'В избранном' : 'Добавить в избранное'}</span>
+      <span aria-hidden="true">★</span><span class="detail-fav-text">${state.fav.has(id) ? 'В избранном' : 'Добавить в избранное'}</span>
     </button>
     <div class="detail-sec"><h4>За что отвечает</h4><p>${h.what}</p></div>
     <div class="detail-sec"><h4>Где и как вырабатывается</h4><p>${h.where}</p></div>
@@ -621,7 +639,12 @@ function bind() {
   wrap.addEventListener('pointerdown', (e) => { dragging = true; wrap.setPointerCapture(e.pointerId); chartPointer(e); });
   wrap.addEventListener('pointermove', (e) => {
     if (dragging) { chartPointer(e); e.preventDefault(); }
-    else if (!isTouch) { const r = $('chart').getBoundingClientRect(); showTip(e.clientX - r.left, r); }
+    else if (!isTouch) {
+      const r = $('chart').getBoundingClientRect();
+      const pw = r.width - PAD.l - PAD.r;
+      const uu = Math.max(0, Math.min(1, (e.clientX - r.left - PAD.l) / pw));
+      showTip(e.clientX - r.left, r, invLog(uu, state.scenario.horizon));
+    }
   });
   wrap.addEventListener('pointerup', () => { dragging = false; });
   wrap.addEventListener('pointercancel', () => { dragging = false; });
