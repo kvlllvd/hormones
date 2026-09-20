@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=28';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=28';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=28';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=29';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=29';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=29';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=28';
+} from './engine.js?v=29';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
