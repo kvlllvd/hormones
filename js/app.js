@@ -89,6 +89,14 @@ function applyProfile() {
   $('navProfileText').textContent = label;
 }
 
+/* Пол и возраст трогают редко: на широком экране кнопка стоит в подвале
+   рядом со служебной строкой, на узком — в самом низу меню. */
+function placeProfile() {
+  const btn = $('navProfile');
+  const host = isSheet() ? $('picker') : $('footRow');
+  if (btn.parentElement !== host) host.appendChild(btn);
+}
+
 /* ─── меню разделов ─────────────────────────────────────── */
 
 /* На узком экране навигация живёт в выезжающей панели под бургером,
@@ -837,6 +845,7 @@ function bind() {
     clearTimeout(rt);
     rt = setTimeout(() => {
       if (!isSheet() && state.navOpen) closeNav();
+      placeProfile();
       syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
@@ -860,6 +869,7 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1]
 }
 
 bind();
+placeProfile();
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
