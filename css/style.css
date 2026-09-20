@@ -539,7 +539,11 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   /* пол и возраст трогают редко — они уходят в самый низ панели */
   .profile{margin:auto 0 0; flex:none}
   .nav-profile{display:flex; width:100%; justify-content:space-between; margin:0; padding:12px 14px; border-radius:13px}
-  .nav-profile-caret{display:none}
+  .nav-profile-value{margin-left:auto}
+  .nav-profile-caret{margin-left:8px}
+  /* В панели меню занимает всю её ширину и раскрывается вверх над кнопкой. */
+  .profile-pop{width:auto; left:0; right:0; bottom:calc(100% + 8px)}
+  .profile-opt{padding:11px 6px; font-size:14px}
   .cats,.chips{display:flex; flex-wrap:wrap; padding:0}
   .cats{gap:4px 18px; margin-bottom:14px; padding:0 0 14px; border-bottom:1px solid var(--line-soft)}
   .chips{gap:5px; padding:0 0 6px}

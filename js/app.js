@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=34';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=34';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=34';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=35';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=35';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=35';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=34';
+} from './engine.js?v=35';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -99,9 +99,9 @@ function placeProfile() {
   if (box.parentElement !== host) host.appendChild(box);
 }
 
-/* На широком экране пол и возраст меняются прямо из подвала: кнопка раскрывает
-   меню и применяет выбор сразу, без подтверждения. На телефоне остаётся карточка —
-   в узкой панели выпадающему меню негде развернуться. */
+/* Пол и возраст меняются прямо из кнопки — и в подвале, и в меню на телефоне:
+   меню раскрывается вверх и применяет выбор сразу, без подтверждения.
+   Карточка на весь экран осталась только для первого захода. */
 function buildProfilePop() {
   const mk = (host, items, key) => {
     host.innerHTML = '';
@@ -152,6 +152,7 @@ function openNav() {
 }
 function closeNav() {
   if (!state.navOpen) return;
+  closeProfilePop();
   state.navOpen = false;
   $('picker').classList.remove('is-open');
   $('navScrim').hidden = true;
@@ -820,7 +821,7 @@ const toTop = () =>
 /* ─── события ───────────────────────────────────────────── */
 
 function bind() {
-  $('navProfile').onclick = () => (isSheet() ? openOnboarding() : toggleProfilePop());
+  $('navProfile').onclick = toggleProfilePop;
   $('burgerBtn').onclick = () => (state.navOpen ? closeNav() : openNav());
   $('navClose').onclick = closeNav;
   $('navScrim').onclick = closeNav;
