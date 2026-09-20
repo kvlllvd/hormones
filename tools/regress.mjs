@@ -611,10 +611,135 @@ async function suiteControls(p) {
   return bad;
 }
 
+async function suiteContent(p) {
+  /* Содержимое страницы: рекомендация, блок источника, вода, счётчики,
+     отступы и знак сброса — всё, что легко потерять при следующей правке. */
+  const bad = [];
+  const check = (c, m) => { if (!c) bad.push('✗ ' + m); };
+
+
+  /* ── десктоп ── */
+  await p.viewport(1280, 900, false);
+  await p.goto(BASE + '?p=m-a26#caffeine');
+  let r = await p.eval(`(() => {
+    const gap = Math.round(document.querySelector('.stats').getBoundingClientRect().top
+      - document.getElementById('blurbWrap').getBoundingClientRect().bottom);
+    const src = document.querySelector('.source'), foot = document.querySelector('.foot');
+    const rec = document.querySelector('.recovery');
+    const sb = src.getBoundingClientRect(), fb = foot.getBoundingClientRect(), rb = rec.getBoundingClientRect();
+    return {
+      gap,
+      timingTitle: document.querySelector('.timing-title').textContent,
+      srcTitle: document.querySelector('.source-title').textContent,
+      srcLen: document.getElementById('sourceText').textContent.trim().length,
+      afterRecovery: sb.top >= rb.bottom - 1,
+      beforeFooter: sb.bottom <= fb.top + 1,
+      inMain: !!src.closest('main'),
+      srcRight: Math.round(sb.right), iw: innerWidth,
+      stale: /Лучшее время/.test(document.body.innerText),
+      counters: document.body.innerText.match(/4[0-9] сценариев/g),
+      icon: (() => { const s = document.querySelector('#resetBtn svg');
+        return { w: s.getAttribute('width'), paths: s.querySelectorAll('path').length,
+          stroke: s.querySelector('path').getAttribute('stroke-width') }; })(),
+    };
+  })()`);
+  check(r.gap === 46, `десктоп: отступ текст→плашки ${r.gap}px вместо 46`);
+  check(r.timingTitle === 'Рекомендация', 'заголовок блока: ' + r.timingTitle);
+  check(r.srcTitle && r.srcLen > 40, 'блок источника пуст: ' + JSON.stringify([r.srcTitle, r.srcLen]));
+  check(r.afterRecovery && r.beforeFooter && r.inMain, 'блок источника не между возвратом к норме и подвалом');
+  check(r.srcRight <= r.iw, 'блок источника за краем');
+  check(!r.stale, 'на странице осталось «Лучшее время»');
+  check(r.icon.w === '16' && r.icon.paths === 2 && r.icon.stroke === '2.0', 'знак сброса: ' + JSON.stringify(r.icon));
+
+  /* источник меняется по сценарию и честно говорит, когда его нет */
+  r = await p.eval(`(async () => {
+    const get = async (id) => { location.hash = '#' + id; await new Promise(r => setTimeout(r, 90));
+      return document.getElementById('sourceText').textContent; };
+    return { water: await get('water'), breakup: await get('breakup'), bike40: await get('bike40'),
+      caffeine: await get('caffeine'), sleep: await get('sleep') };
+  })()`);
+  check(/Boschmann/.test(r.water) && /Exp Physiol/.test(r.water), 'у воды не названы работы: ' + r.water.slice(0, 60));
+  check(/не рассматривает/.test(r.breakup), 'у расставания не сказано, что источника нет');
+  check(/не по дистанциям/.test(r.bike40), 'у велозаезда не сказано про дистанции');
+  check(/NIDA/.test(r.caffeine), 'у кофеина не назван NIDA');
+  check(/Endotext/.test(r.sleep), 'у сна не назван Endotext');
+  check(new Set(Object.values(r)).size === 5, 'тексты источников не различаются: должно быть пять разных');
+
+  /* оговорка в подвале: свёрнута — только лид, развёрнута — с новыми фразами */
+  r = await p.eval(`(() => {
+    const warn = document.getElementById('footWarn'), btn = document.getElementById('footMore');
+    const restHidden = getComputedStyle(document.querySelector('.foot-warn-rest')).display;
+    btn.click();
+    const open = document.querySelector('.foot-warn-rest').textContent;
+    const shown = getComputedStyle(document.querySelector('.foot-warn-rest')).display;
+    btn.click();
+    return { restHidden, shown, label: btn.textContent,
+      hasAge: /средние по возрастным группам/.test(open),
+      hasDose: /Доза, тренированность/.test(open),
+      hasRecovery: /восстановиться после прошлой нагрузки/.test(open) };
+  })()`);
+  check(r.restHidden === 'none', 'свёрнутая оговорка показывает лишнее');
+  check(r.shown !== 'none', 'оговорка не раскрылась');
+  check(r.hasAge && r.hasDose && r.hasRecovery, 'в оговорке нет новых фраз: ' + JSON.stringify(r));
+
+  /* вода на месте, с дозой и тремя гормонами */
+  await p.goto(BASE + '?p=m-a26#water');
+  r = await p.eval(`(() => {
+    const chips = [...document.querySelectorAll('#chips .chip')].map(c => c.textContent);
+    return { chips, last: chips[chips.length - 1], name: document.getElementById('sitName').textContent,
+      dose: document.getElementById('dose').textContent, doseHidden: document.getElementById('dose').hidden,
+      cards: document.querySelectorAll('#hormones .hcard').length,
+      timing: document.getElementById('timingText').textContent.length,
+      cat: document.getElementById('sitTag').textContent };
+  })()`);
+  check(r.last === 'Вода' && r.name === 'Вода', 'воды нет последним чипом в «Питании»: ' + JSON.stringify(r.chips));
+  check(r.cat === 'Питание', 'вода не в «Питании»: ' + r.cat);
+  check(!r.doseHidden && /300 мл/.test(r.dose), 'у воды нет дозы: ' + r.dose);
+  check(r.cards === 3, 'у воды ' + r.cards + ' карточек гормонов вместо 3');
+  check(r.timing > 40, 'у воды пустая рекомендация');
+
+  /* ── телефон ── */
+  await p.viewport(390, 844, true);
+  await p.goto(BASE + '?p=m-a26#caffeine');
+  r = await p.eval(`(() => {
+    const gap = Math.round(document.querySelector('.stats').getBoundingClientRect().top
+      - document.getElementById('blurbWrap').getBoundingClientRect().bottom);
+    document.getElementById('burgerBtn').click();
+    const cats = document.getElementById('cats'), cs = getComputedStyle(cats);
+    const src = document.querySelector('.source').getBoundingClientRect();
+    return { gap, padBottom: cs.paddingBottom, marginBottom: cs.marginBottom,
+      border: cs.borderBottomWidth, srcLeft: Math.round(src.left), srcRight: Math.round(src.right), iw: innerWidth };
+  })()`);
+  check(r.gap === 30, `телефон: отступ текст→плашки ${r.gap}px вместо 30`);
+  check(r.padBottom === '26px' && r.marginBottom === '26px', `телефон: воздух у разделителя ${r.padBottom} / ${r.marginBottom} вместо 26px`);
+  check(r.border === '1px', 'телефон: разделитель пропал');
+  check(r.srcLeft >= 0 && r.srcRight <= r.iw, 'телефон: блок источника за краем');
+
+  /* тап-зона знака сброса на телефоне */
+  r = await p.eval(`(() => {
+    const b = document.getElementById('resetBtn').getBoundingClientRect();
+    return { w: Math.round(b.width), h: Math.round(b.height) };
+  })()`);
+  check(r.w >= 32 && r.h >= 32, 'телефон: кнопка сброса мельче 32px — ' + JSON.stringify(r));
+
+  /* счётчики */
+  r = await p.eval(`(() => ({
+    meta: document.querySelector('meta[name=description]').content.match(/\\d+ жизненных/)?.[0],
+    og: document.querySelector('meta[property="og:description"]').content.match(/\\d+ сценариев/)?.[0],
+    foot: document.querySelector('.foot-meta').textContent.match(/\\d+ сценариев/)?.[0],
+    cnt: document.getElementById('cntAll').textContent,
+  }))()`);
+  check(r.meta === '48 жизненных' && r.og === '48 сценариев' && r.foot === '48 сценариев', 'счётчики: ' + JSON.stringify(r));
+  check(r.cnt === '21', 'счётчик гормонов: ' + r.cnt);
+  if (p.errors.length) bad.push('✗ консоль: ' + p.errors.join(' | '));
+  return bad;
+}
+
 const p = await connect();
 let total = 0;
 for (const [title, suite] of [['раскладка', suiteLayout], ['график по всем сценариям', suiteChart],
-                              ['поведение и навигация', suiteBehaviour], ['органы управления', suiteControls]]) {
+                              ['поведение и навигация', suiteBehaviour], ['органы управления', suiteControls],
+                              ['содержимое страницы', suiteContent]]) {
   const found = await suite(p);
   console.log(`${title}: ${found.length ? found.length + ' замечаний' : 'чисто'}`);
   found.forEach(l => console.log('  ' + l));
