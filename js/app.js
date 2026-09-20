@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=13';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE } from './situations.js?v=13';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=13';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=14';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE } from './situations.js?v=14';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=14';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=13';
+} from './engine.js?v=14';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -48,7 +48,9 @@ function saveProfile() {
 }
 
 function buildOnboarding() {
-  const draft = { sex: state.sex, age: state.age };
+  /* Первый заход — пусто: значения по умолчанию нужны для рендера под окном,
+     но выбирать за человека пол и возраст нельзя. Дальше — текущие. */
+  const draft = neverConfigured ? { sex: null, age: null } : { sex: state.sex, age: state.age };
   const mk = (host, items, key) => {
     host.innerHTML = '';
     items.forEach(it => {
@@ -897,8 +899,10 @@ if (SITUATION_BY_ID[hash]) { state.sit = hash; state.cat = SITUATION_BY_ID[hash]
 
 /* Ссылка вида ?p=f-a36 открывает карту сразу под нужный профиль. */
 const fromLink = (new URLSearchParams(location.search).get('p') || '').split('-');
-if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === fromLink[1])) {
-  state.sex = fromLink[0]; state.age = fromLink[1]; neverConfigured = false; saveProfile();
+/* ступень «35 лет» вошла в 26–35 — старые ссылки переводим, как и старый профиль */
+const linkAge = fromLink[1] === 'a35' ? 'a26' : fromLink[1];
+if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === linkAge)) {
+  state.sex = fromLink[0]; state.age = linkAge; neverConfigured = false; saveProfile();
 }
 
 bind();
@@ -914,6 +918,8 @@ if (state.sex || loadProfile()) {
   applyProfile();
   renderAll();
   /* на телефоне онбординга нет — работаем на значениях по умолчанию,
-     пол и возраст меняются из меню, когда это понадобится */
-  if (isSheet()) neverConfigured = false; else openOnboarding();
+     пол и возраст меняются из меню, когда это понадобится. Зато показываем,
+     где эта навигация живёт: под бургером её иначе не найти. */
+  if (isSheet()) { neverConfigured = false; showMenuOnboarding(); }
+  else openOnboarding();
 }
