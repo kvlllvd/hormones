@@ -445,6 +445,8 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .foot-row .nav-profile{margin:0; background:none; border-color:transparent; padding:6px 4px}
 .foot-row .nav-profile:hover{border-color:transparent; color:var(--ink)}
 .foot-row .nav-profile-label{display:none}
+/* В подвале кнопка стоит у правого края: меню растёт влево, иначе уходит за страницу. */
+.foot-row .profile-pop{left:auto; right:0}
 .foot-meta{font-size:12.5px; color:var(--ink-3); min-width:0}
 .foot-meta a{color:var(--ink-2)}
 

@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=37';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=37';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=37';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=38';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=38';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=38';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=37';
+} from './engine.js?v=38';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -497,6 +497,20 @@ function setActive(id) {
 const PAD = { l: 36, r: 10, t: 42, b: 18 };
 const SEX_COLOR = { m: '#3E8FD4', f: '#D9569B' };
 
+/* Ширина подписи на графике. Оценка «столько-то пикселей на символ» годится
+   для упаковки меток (журнал: точный замер там сбивает раскладку и меток
+   выживает меньше), но решать по ней, влезает ли подпись в поле, нельзя:
+   на кириллице она занижает ширину, и подписи уезжали за край. Для границ
+   поля меряем честно — тем же шрифтом, каким рисуем. */
+const measureCtx = document.createElement('canvas').getContext('2d');
+let measureFamily = '';
+function textWidth(text, size, weight) {
+  /* Гарнитуру спрашиваем раз: ползунок перерисовывает график на каждый кадр. */
+  if (!measureFamily) measureFamily = getComputedStyle(document.body).fontFamily || 'sans-serif';
+  measureCtx.font = `${weight} ${size}px ${measureFamily}`;
+  return measureCtx.measureText(text).width;
+}
+
 function chartGeom() {
   const host = $('chart');
   return { w: host.clientWidth || 600, h: host.clientHeight || 220 };
@@ -549,7 +563,12 @@ function drawChart() {
       if (mk.t > H) return;
       const x = xOf(toLog(mk.t, H));
       const est = mk.l.length * 4.95;
-      const anchor = x + est > w - PAD.r ? 'end' : 'start';
+      const real = textWidth(mk.l, 9, 400);
+      /* Сначала вправо от риски, если не влезает — влево; не влезает никуда —
+         метку не рисуем вовсе: обрезанная краем поля читается хуже, чем никакая. */
+      const fits = (a) => (a === 'end' ? x - 5 - real >= PAD.l : x + 5 + real <= w - PAD.r);
+      const anchor = fits('start') ? 'start' : fits('end') ? 'end' : null;
+      if (!anchor) return;
       const tx = anchor === 'end' ? x - 5 : x + 5;
       const left = anchor === 'end' ? tx - est : tx;
       let row = i % 2;
@@ -593,31 +612,49 @@ function drawChart() {
 
   let top = '', topLabel = '';
   const hiC = hiCurves.find(c => c.sex === state.sex) || hiCurves[0];
+  /* Точки плейхеда нужны раньше отрисовки: подпись кривой обходит их все,
+     а не только точку своей кривой — соседняя лежит на том же x. */
+  const dotList = dual
+    ? hiCurves
+    : [hiC, ...curves.filter(c => c !== hiC).slice(0, 3)].filter(Boolean);
   if (hiC) {
     const far = hiC.pts.reduce((a, b) => (Math.abs(b[1]) > Math.abs(a[1]) ? b : a));
     const up = far[1] >= 0;
     const color = dual ? '#0E0E10' : (up ? 'var(--up)' : 'var(--down)');
     const name = HORMONE_BY_ID[hiC.e.id].name;
-    const est = name.length * 6.4;
+    const est = textWidth(name, 11.5, 500);
     const fx = xOf(far[0]);
     /* Подпись уводим на ту сторону от пика, где не стоит точка плейхеда. */
     const spanOf = (a) => (a === 'end' ? [fx - 11 - est, fx - 11] : [fx + 11, fx + 11 + est]);
     const clashes = (a) => { const [l, r] = spanOf(a); return pxN > l - 7 && pxN < r + 7; };
     const inField = (a) => { const [l, r] = spanOf(a); return l >= PAD.l + 2 && r <= w - PAD.r - 2; };
     let anchor = inField('start') ? 'start' : 'end';
-    let stuck = clashes(anchor);
-    if (stuck) {
+    if (clashes(anchor)) {
       const alt = anchor === 'start' ? 'end' : 'start';
-      if (inField(alt) && !clashes(alt)) { anchor = alt; stuck = false; }
+      if (inField(alt) && !clashes(alt)) anchor = alt;
     }
     let lx = anchor === 'end' ? fx - 11 : fx + 11;
     lx = Math.max(PAD.l + (anchor === 'end' ? est : 0) + 4, Math.min(w - PAD.r - 4, lx));
-    /* Разойтись по горизонтали не вышло — уводим подпись по вертикали от точки. */
+    /* На узком экране подпись притирается к краю поля — и снова наезжает на
+       точку, хотя выбранная сторона была свободна. Поэтому наложение считаем
+       по итоговому месту, а не по задуманному. */
+    const [sl, sr] = anchor === 'end' ? [lx - est, lx] : [lx, lx + est];
+    const stuck = pxN > sl - 7 && pxN < sr + 7;
+    /* Разойтись по горизонтали не вышло — уводим подпись по вертикали от точки.
+       Мало выбрать дальнюю сторону: подпись высотой 15 px и точка радиусом 4,5
+       всё равно перекрывались. Поэтому отводим ровно настолько, чтобы рамка
+       подписи прошла мимо точки, и не дальше — иначе она оторвётся от кривой. */
     const clampY = (v) => Math.max(PAD.t + 10, Math.min(PAD.t + ph - 4, v));
     const above = clampY(yOf(far[1]) - 10), below = clampY(yOf(far[1]) + 16);
-    const dotY = yOf(Math.log2(levelAt(hiC.e, state.t)));
+    const dotYs = dotList.map(c => yOf(Math.log2(levelAt(c.e, state.t))));
+    /* Подпись высотой 15 px сидит на базовой линии: сверху 12, снизу 3.
+       Мимо точки радиусом 4,5 она проходит, если отстоит на 9 вверх или 18 вниз. */
+    const free = (v) => dotYs.every(dy => v <= dy - 9 || v >= dy + 18);
     let ly = up ? above : below;
-    if (stuck) ly = Math.abs(above - dotY) >= Math.abs(below - dotY) ? above : below;
+    if (stuck) {
+      const over = clampY(Math.min(...dotYs) - 12), under = clampY(Math.max(...dotYs) + 20);
+      ly = [up ? above : below, up ? below : above, over, under].find(free) ?? ly;
+    }
     top = hiCurves.map(c => `<path d="${path(c.pts)}" fill="none" stroke="${dual ? SEX_COLOR[c.sex] : color}"
       stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
     topLabel = `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}"
@@ -626,9 +663,6 @@ function drawChart() {
   }
 
   const head = `<line x1="${px}" y1="${PAD.t - 4}" x2="${px}" y2="${PAD.t + ph}" stroke="#0E0E10" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`;
-  const dotList = dual
-    ? hiCurves
-    : [hiC, ...curves.filter(c => c !== hiC).slice(0, 3)].filter(Boolean);
   const dots = dotList.map(c => {
     const v = Math.log2(levelAt(c.e, state.t));
     const upv = v > 0.02, flat = Math.abs(v) <= 0.02;
@@ -952,7 +986,8 @@ if (SEXES.some(s => s.id === fromLink[0]) && AGES.some(a => a.id === linkAge)) {
 
 bind();
 placeProfile();
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncBlurb(); syncTiming(); syncChip(); });
+/* Пока шрифт не приехал, замер подписей идёт по запасному — перерисовываем. */
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncBlurb(); syncTiming(); syncChip(); drawChart(); });
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
