@@ -100,10 +100,11 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   display:inline-flex; align-items:center; gap:6px; min-width:0; max-width:46%;
   padding:6px 13px; border-radius:100px; background:var(--ink); color:#fff;
   font-size:13px; font-weight:500; letter-spacing:-.01em; white-space:nowrap;
-  transition:.18s var(--ease);
+  opacity:0; pointer-events:none; transform:translateY(-4px);
+  transition:opacity .2s var(--ease), transform .2s var(--ease);
 }
+.topbar.is-scrolled .sect-chip{opacity:1; pointer-events:auto; transform:none}
 .sect-chip span{overflow:hidden; text-overflow:ellipsis}
-.sect-chip:hover{transform:translateY(-1px)}
 .sect-chip::before{
   content:""; width:5px; height:5px; border-radius:50%; background:#fff; opacity:.6; flex:none;
 }
@@ -122,15 +123,14 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 }
 .nav-top{display:none}
 /* Ситуации переносятся на столько строк, сколько нужно: без скрытого скролла. */
-.cats{display:flex; flex-wrap:wrap; gap:7px; padding:4px 0 2px}
+.cats{display:flex; flex-wrap:wrap; gap:4px 20px; padding:6px 0 4px}
 .chips{display:flex; flex-wrap:wrap; gap:5px; padding:6px 0 0}
 .cat{
-  flex:none; padding:10px 18px; border-radius:100px; font-size:15.5px; font-weight:500;
-  letter-spacing:-.015em; background:var(--surface); color:var(--ink-2);
-  border:1px solid var(--line); transition:.2s var(--ease); white-space:nowrap;
+  flex:none; padding:3px 0; font-size:17px; font-weight:500; letter-spacing:-.025em;
+  color:var(--ink-3); transition:.18s var(--ease); white-space:nowrap;
 }
-.cat:hover{color:var(--ink); border-color:#D6D6CF}
-.cat[aria-selected="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.cat:hover{color:var(--ink-2)}
+.cat[aria-selected="true"]{color:var(--ink)}
 /* Подпись подраздела идёт в потоке вместе с чипами, а не отдельной строкой:
    так ряды заполняются целиком и не остаётся пустого места справа. */
 .chip-sub{
@@ -407,13 +407,7 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   :root{--pad:16px; --topbar-h:56px}
   .burger{display:inline-flex}
   .topbar{gap:8px}
-  /* чип появляется, только когда заголовок сценария уехал под шапку */
-  .sect-chip{
-    max-width:none; flex:1 1 auto; justify-content:flex-start; min-width:0;
-    opacity:0; pointer-events:none; transform:translateY(-4px);
-    transition:opacity .2s var(--ease), transform .2s var(--ease);
-  }
-  .topbar.is-scrolled .sect-chip{opacity:1; pointer-events:auto; transform:none}
+  .sect-chip{max-width:none; flex:1 1 auto; justify-content:flex-start; min-width:0}
 
   /* Вся навигация уезжает в панель под бургером. */
   .picker{
@@ -436,9 +430,9 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   /* пол и возраст трогают редко — они уходят в самый низ панели */
   .nav-profile{display:flex; width:100%; justify-content:space-between; margin:auto 0 0; padding:12px 14px; border-radius:13px; flex:none}
   .cats,.chips{display:flex; flex-wrap:wrap; padding:0}
-  .cats{gap:6px; margin-bottom:14px; padding:0 0 14px; border-bottom:1px solid var(--line-soft)}
+  .cats{gap:4px 18px; margin-bottom:14px; padding:0 0 14px; border-bottom:1px solid var(--line-soft)}
   .chips{gap:5px; padding:0 0 6px}
-  .cat{padding:9px 15px; font-size:15px}
+  .cat{padding:3px 0; font-size:16px}
   .chip{padding:6px 11px; font-size:13px}
   .chip-sub{flex:1 0 100%; padding:9px 0 3px}
   .nav-hint{

@@ -147,14 +147,10 @@ function hideMenuHint() {
 
 /* Чип раздела в шапке нужен только тогда, когда сам заголовок уже уехал
    под неё: пока заголовок виден, чип дублировал бы его. */
-let chipRaf = 0;
 function syncChip() {
-  chipRaf = 0;
-  const h1 = $('sitName');
-  const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h')) || 56;
-  document.querySelector('.topbar').classList.toggle('is-scrolled', h1.getBoundingClientRect().bottom <= top);
+  const bar = document.querySelector('.topbar');
+  bar.classList.toggle('is-scrolled', $('sitName').getBoundingClientRect().bottom <= bar.offsetHeight);
 }
-function queueChip() { if (!chipRaf) chipRaf = requestAnimationFrame(syncChip); }
 
 /* ─── блокировка прокрутки под шитом ────────────────────── */
 
@@ -854,7 +850,7 @@ function bind() {
   wrap.addEventListener('pointercancel', () => { dragging = false; });
   wrap.addEventListener('mouseleave', () => { if (!state.tipPinned) hideTip(); });
 
-  addEventListener('scroll', queueChip, { passive: true });
+  addEventListener('scroll', syncChip, { passive: true });
 
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { closeDetail(); closeOnboarding(); closeNav(); hideTip(); }
