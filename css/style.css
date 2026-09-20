@@ -86,11 +86,20 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .topbar{
   position:sticky; top:0; z-index:40; display:flex; align-items:center;
   gap:10px; height:var(--topbar-h); padding:0 var(--pad); max-width:1080px; margin:0 auto;
-  background:rgba(244,244,241,.8); backdrop-filter:blur(20px) saturate(1.6);
-  -webkit-backdrop-filter:blur(20px) saturate(1.6);
+}
+/* Размытие живёт в отдельном слое и гасится маской к низу: иначе у шапки
+   виден чёткий край, где фильтр обрывается. Слой чуть выше самой шапки —
+   хвост градиента уходит в прозрачность уже за её границей. */
+.topbar::before{
+  content:""; position:absolute; z-index:-1; top:0; left:50%; margin-left:-50vw;
+  width:100vw; height:calc(100% + 18px); pointer-events:none;
+  background:linear-gradient(rgba(244,244,241,.86) 55%, rgba(244,244,241,0));
+  backdrop-filter:blur(20px) saturate(1.6); -webkit-backdrop-filter:blur(20px) saturate(1.6);
+  -webkit-mask-image:linear-gradient(#000 55%, rgba(0,0,0,0));
+  mask-image:linear-gradient(#000 55%, rgba(0,0,0,0));
 }
 .wordmark{
-  display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:500;
+  display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:600;
   letter-spacing:-.02em; text-decoration:none; white-space:nowrap; min-width:0; flex:none;
 }
 .wordmark-text{overflow:hidden; text-overflow:ellipsis}
@@ -108,7 +117,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
    через весь экран. Отсюда 100vw и сдвиг от середины. */
 .topbar.is-scrolled::after{
   content:""; position:absolute; bottom:0; left:50%; margin-left:-50vw;
-  width:100vw; height:1px; background:#fff;
+  width:100vw; height:1px; background:rgba(255,255,255,.5);
 }
 .sect-chip span{overflow:hidden; text-overflow:ellipsis}
 
@@ -218,6 +227,12 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 }
 .time-caption{font-size:12.5px; color:var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .time-load{font-size:12px; color:var(--ink-3); white-space:nowrap; font-family:"Geist Mono",monospace}
+/* Доза сценария: на чём посчитана кривая. Стоит между «Сбросить» и отклонением. */
+.dose{
+  flex:none; max-width:42%; padding:5px 10px; border-radius:100px; background:var(--surface-2);
+  color:var(--ink-2); font-size:11.5px; line-height:1.25; letter-spacing:-.01em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 .reset{
   display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:100px;
   background:var(--surface-2); color:var(--ink-2); font-size:12.5px; flex:none;
@@ -459,6 +474,8 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .burger{display:inline-flex}
   .topbar{gap:8px}
   .sect-chip{flex:0 1 auto; min-width:0; margin-left:0; max-width:calc(100% - 96px)}
+  /* На узком экране имени и чипа одновременно не бывает: чип занимает его место. */
+  .topbar.is-scrolled .wordmark-text{display:none}
 
   /* Вся навигация уезжает в панель под бургером. */
   .picker{
@@ -549,12 +566,11 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
     max-height:82vh; animation:sheet .3s var(--ease);
   }
   /* крестик в шите вдвое крупнее: по нему целятся пальцем */
+  .time-head{flex-wrap:wrap}
+  .dose{order:5; max-width:100%; margin-top:2px}
   .detail-close{display:grid; top:14px; right:14px; width:60px; height:60px; font-size:26px; font-weight:300}
   .detail-head{padding-right:58px}
   @keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
-}
-@media (max-width:560px){
-  .wordmark-text{display:none}
 }
 @media (hover:none){
   .hcard:hover{transform:none}

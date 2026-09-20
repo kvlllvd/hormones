@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=14';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE } from './situations.js?v=14';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=14';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=15';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE } from './situations.js?v=15';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=15';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=14';
+} from './engine.js?v=15';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -278,6 +278,11 @@ function renderAll() {
   $('sitBlurb').textContent = sit.blurb;
   syncBlurb();
   $('sectChipText').textContent = sit.short || sit.name;
+
+  /* Кривая посчитана на конкретную дозу — показываем её рядом с графиком. */
+  const dose = $('dose');
+  dose.textContent = DOSE[sit.id] || '';
+  dose.hidden = !DOSE[sit.id];
 
   renderStats(sit);
   renderHormones();
