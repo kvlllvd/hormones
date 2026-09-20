@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
 </head>
 <body>
@@ -42,8 +42,11 @@
 <header class="topbar">
   <a class="wordmark" href="./" aria-label="Гормональная карта">
     <svg class="wordmark-mark" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="1.1" y="1.1" width="17.8" height="17.8" rx="5.6" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M10 5.6v8.8M5.6 10h8.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <g transform="rotate(-38 10 10)" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <path d="M6 1.5C6 5.5 14 6.5 14 10s-8 4.5-8 8.5"/>
+        <path d="M14 1.5C14 5.5 6 6.5 6 10s8 4.5 8 8.5"/>
+        <path d="M6.5 3.2h7M6.5 16.8h7"/>
+      </g>
     </svg>Гормональная карта
   </a>
   <button class="profile-pill" id="profileBtn" aria-label="Изменить пол и возраст">
@@ -54,8 +57,8 @@
 
 <nav class="picker" aria-label="Категории">
   <div class="cats" id="cats" role="tablist" aria-label="Категории"></div>
+  <div class="chips" id="chips" role="tablist" aria-label="Ситуации"></div>
 </nav>
-<div class="chips" id="chips" role="tablist" aria-label="Ситуации"></div>
 
 <main>
   <section class="hero">
@@ -133,6 +136,6 @@
 </div>
 <div class="scrim" id="scrim" hidden></div>
 
-<script type="module" src="js/app.js?v=5"></script>
+<script type="module" src="js/app.js?v=6"></script>
 </body>
 </html>

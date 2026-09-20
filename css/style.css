@@ -85,7 +85,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:500;
   letter-spacing:-.02em; text-decoration:none; white-space:nowrap;
 }
-.wordmark-mark{width:17px; height:17px; flex:none; color:var(--ink); display:block}
+.wordmark-mark{width:20px; height:20px; flex:none; color:var(--ink); display:block}
 .profile-pill{
   display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:100px;
   background:var(--surface); box-shadow:0 1px 2px rgba(16,16,20,.06); font-size:13.5px;
@@ -104,7 +104,14 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   display:flex; flex-wrap:wrap; gap:6px;
   padding:4px var(--pad); max-width:1080px; margin:0 auto;
 }
-.chips{padding-bottom:14px}
+.chips{
+  padding-bottom:14px;
+  /* Липкий блок не должен съедать экран: очень длинные категории
+     (тело и нагрузка) прокручиваются внутри себя, всё остальное влезает целиком. */
+  max-height:min(46vh, 340px); overflow-y:auto; overscroll-behavior:contain;
+  scrollbar-width:none;
+}
+.chips::-webkit-scrollbar{display:none}
 .cat{
   flex:none; padding:6px 12px; border-radius:100px; font-size:13.5px; color:var(--ink-3);
   transition:.18s var(--ease); white-space:nowrap;
@@ -344,6 +351,9 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   .picker{top:43px}
   .cat{padding:5px 10px; font-size:13px}
   .cats{gap:5px}
+  .chip{padding:7px 12px; font-size:13.5px}
+  .chips{gap:5px; padding-bottom:10px; max-height:min(38vh, 260px)}
+  .chip-sub{padding:6px 0 0 2px}
   .stats{grid-template-columns:1fr; gap:6px}
   .stat{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:12px 14px}
   .stat-label{margin:0; flex:none}
