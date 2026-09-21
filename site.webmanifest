@@ -1,0 +1,12 @@
+{
+  "name": "Hormone Atlas",
+  "short_name": "Hormones",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F5F5F3",
+  "theme_color": "#F5F5F3",
+  "icons": [
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
