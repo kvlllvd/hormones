@@ -219,7 +219,6 @@ function hideMenuHint() {
    под неё: пока заголовок виден, чип дублировал бы его. */
 /* Кнопка нужна, только если текст действительно не влез в три строки:
    на широком экране обрезки нет вовсе, и кнопка сама остаётся скрытой. */
-function syncBlurb() { collapse($('sitBlurb'), $('blurbMore'), $('blurbWrap')); }
 function syncTiming() { collapse($('timingText'), $('timingMore'), $('timing')); }
 
 /* Сворачиваем текст и решаем, нужна ли кнопка: если он и так влез, она лишняя.
@@ -355,8 +354,7 @@ function renderAll() {
   $('sitTag').textContent = CATEGORIES.find(c => c.id === sit.cat).title;
   $('sitName').textContent = sit.name;
   $('sitBlurb').textContent = sit.blurb;
-  syncBlurb();
-  $('sectChipText').textContent = sit.short || sit.name;
+  $('sectChipText').textContent = sit.name;
 
   /* Кривая посчитана на конкретную дозу — показываем её рядом с графиком. */
   const dose = $('dose');
@@ -926,13 +924,6 @@ function bind() {
     if (b) toggleSex(b.dataset.sex);
   });
 
-  const bmore = $('blurbMore');
-  bmore.onclick = () => {
-    const open = $('blurbWrap').classList.toggle('is-open');
-    bmore.setAttribute('aria-expanded', open);
-    bmore.textContent = open ? 'Скрыть' : 'Ещё';
-  };
-
   const tmore = $('timingMore');
   tmore.onclick = () => {
     const open = $('timing').classList.toggle('is-open');
@@ -1001,7 +992,7 @@ function bind() {
       if (!isSheet() && state.navOpen) closeNav();
       placeProfile();
       placeTheme();
-      syncBlurb(); syncTiming();
+      syncTiming();
       syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
@@ -1031,7 +1022,7 @@ placeProfile();
 placeTheme();
 loadTheme();
 /* Пока шрифт не приехал, замер подписей идёт по запасному — перерисовываем. */
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncBlurb(); syncTiming(); syncChip(); drawChart(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncTiming(); syncChip(); drawChart(); });
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
