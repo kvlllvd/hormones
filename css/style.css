@@ -136,7 +136,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
   animation:rise .5s var(--ease) both;
 }
 .ob-close[hidden]{display:none}
-.ob-close{position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%; color:var(--ink-3); font-size:13px; display:grid; place-items:center}
+.ob-close{position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%; color:var(--ink-3); display:grid; place-items:center}
 .ob-close:hover{background:var(--surface-2); color:var(--ink)}
 .ob-title{font-size:26px; letter-spacing:-.03em}
 .ob-lead{color:var(--ink-2); font-size:15px; margin:8px 0 26px; text-wrap:pretty}
@@ -583,6 +583,15 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   background:transparent; border-radius:100px; transition:background-color .3s var(--ease);
 }
 .detail.is-scrolling::-webkit-scrollbar-thumb{background:var(--scroll-thumb)}
+/* Крестик везде один и тот же и нарисован вектором, а не знаком «✕»: у знака
+   положение внутри строки задаёт шрифт, которым его рисует система, — на iOS
+   это не тот шрифт, что на десктопе, и крестик уезжал по вертикали
+   относительно соседнего знака темы. Обводка у всех знаков в шапке одна
+   (1,7 экранного пикселя независимо от размера) — отсюда non-scaling-stroke. */
+.x{flex:none}
+.iconbtn .x,.ob-close .x{width:26px; height:26px}
+.tip-close .x{width:18px; height:18px}
+
 /* Одна круглая кнопка на всё: крестик в меню, крестик и «закрепить» в окне гормона.
    Кружок 34px, тап-зона расширена невидимым полем — палец попадает и на телефоне. */
 .iconbtn{
@@ -745,7 +754,8 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   }
   /* На телефоне у кнопок-кружков нет фона: в него всё равно целятся пальцем,
      а сам знак вдвое крупнее — так он читается без подложки. */
-  .iconbtn,.ob-close{background:none; width:44px; height:44px; font-size:26px; font-weight:300}
+  .iconbtn,.ob-close{background:none; width:44px; height:44px}
+  .iconbtn .x,.ob-close .x{width:34px; height:34px}
   .iconbtn:hover{background:none}
   /* Пин в шите не нужен: лист и так держится, пока его не закроют. */
   .detail-pin{display:none}

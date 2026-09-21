@@ -363,6 +363,24 @@ async function suiteBehaviour(p) {
   check(r.themeBeforeClose, 'телефон: знак темы стоит не рядом с крестиком');
   check(r.eyebrow !== 'none', 'телефон: пропал раздел над заголовком');
 
+  /* знак темы и крестик — пара: сравниваем чернила, а не коробки.
+     Коробки совпадали и тогда, когда знак визуально уезжал вверх. */
+  r = await p.eval(`(() => {
+    const ink = (el) => { const b = el.getBoundingClientRect(); return +(b.top + b.height / 2).toFixed(2); };
+    const vis = [...document.querySelectorAll('.nav-top .theme svg')].find(s => getComputedStyle(s).display !== 'none');
+    const cross = document.querySelector('#navClose .x path');
+    const glyph = (sel) => ink(document.querySelector(sel));
+    const sun = ink(vis.querySelector('path'));
+    document.getElementById('themeBtn').click();
+    const vis2 = [...document.querySelectorAll('.nav-top .theme svg')].find(s => getComputedStyle(s).display !== 'none');
+    const moon = ink(vis2.querySelector('path'));
+    document.getElementById('themeBtn').click();
+    return { sun, moon, cross: ink(cross), text: [...document.querySelectorAll('.iconbtn, .ob-close, .tip-close')].filter(b => b.textContent.trim()).length };
+  })()`);
+  check(Math.abs(r.sun - r.cross) <= 0.5, `солнце не на уровне крестика: ${r.sun} против ${r.cross}`);
+  check(Math.abs(r.moon - r.cross) <= 0.5, `луна не на уровне крестика: ${r.moon} против ${r.cross}`);
+  check(!r.text, 'крестик снова нарисован знаком, а не вектором: таких кнопок ' + r.text);
+
   /* крестик меню ровно на оси бургера, по обеим осям */
   r = await p.eval(`(() => {
     const c = (el) => { const b = el.getBoundingClientRect(); return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)]; };
