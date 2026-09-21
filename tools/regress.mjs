@@ -261,6 +261,10 @@ async function suiteBehaviour(p) {
      при скролле знак уступает угол чипу раздела */
   r = await p.eval(`(() => {
     const de = document.documentElement, btn = document.getElementById('themeBtn');
+    /* Профиль Chrome живёт между прогонами, и тема в нём могла остаться
+       тёмной с прошлого раза — тогда первый клик вёл бы в светлую, и
+       проверка падала бы на ровном месте. Начинаем всегда со светлой. */
+    if (de.dataset.theme === 'dark') btn.click();
     const was = de.dataset.theme;
     btn.click();
     const dark = { theme: de.dataset.theme, pressed: btn.getAttribute('aria-pressed'),

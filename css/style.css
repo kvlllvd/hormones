@@ -589,8 +589,11 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
    относительно соседнего знака темы. Обводка у всех знаков в шапке одна
    (1,7 экранного пикселя независимо от размера) — отсюда non-scaling-stroke. */
 .x{flex:none}
-.iconbtn .x,.ob-close .x{width:26px; height:26px}
-.tip-close .x{width:18px; height:18px}
+.iconbtn .x,.ob-close .x{width:20.8px; height:20.8px}
+.tip-close .x{width:14.4px; height:14.4px}
+/* Пин крупнее крестика: у него мелкая внутренняя деталь, и в один размер
+   с крестиком он читался хуже соседа. */
+.detail-pin svg{width:16.8px; height:16.8px}
 
 /* Одна круглая кнопка на всё: крестик в меню, крестик и «закрепить» в окне гормона.
    Кружок 34px, тап-зона расширена невидимым полем — палец попадает и на телефоне. */
@@ -755,7 +758,7 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   /* На телефоне у кнопок-кружков нет фона: в него всё равно целятся пальцем,
      а сам знак вдвое крупнее — так он читается без подложки. */
   .iconbtn,.ob-close{background:none; width:44px; height:44px}
-  .iconbtn .x,.ob-close .x{width:34px; height:34px}
+  .iconbtn .x,.ob-close .x{width:27.2px; height:27.2px}
   .iconbtn:hover{background:none}
   /* Пин в шите не нужен: лист и так держится, пока его не закроют. */
   .detail-pin{display:none}
