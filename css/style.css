@@ -548,6 +548,9 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 /* в свёрнутом виде от предупреждения остаётся одна строка — остальное под кнопкой More */
 .foot-warn-rest{display:none}
 .foot-warn.is-open .foot-warn-rest{display:inline}
+.foot-warn-p{display:inline}
+.foot-warn.is-open .foot-warn-p{display:block}
+.foot-warn.is-open .foot-warn-p + .foot-warn-p{margin-top:.9em}
 .foot-warn-lead{color:var(--ink-2)}
 .foot-more{
   font-size:12px; color:var(--ink-2); padding:1px 7px; margin-left:6px; border-radius:100px;
