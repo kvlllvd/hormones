@@ -12,10 +12,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=63">
-<link rel="icon" href="favicon.svg?v=63" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=63">
-<link rel="manifest" href="site.webmanifest?v=63">
+<link rel="stylesheet" href="css/style.css?v=64">
+<link rel="icon" href="favicon.svg?v=64" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=64">
+<link rel="manifest" href="site.webmanifest?v=64">
 <meta name="apple-mobile-web-app-title" content="Hormone Atlas">
 <script>
   /* Тема применяется до первой отрисовки: иначе тёмная страница успевает
@@ -131,14 +131,8 @@
         <span class="time-caption" id="timeCaption">от начала события</span>
       </div>
       <button class="reset" id="resetBtn" title="Вернуть график в исходное положение" aria-label="Сбросить график">
-        <!-- Дуга 250° и треугольник на её конце по касательной. Знак был
-             неразборчив на 14px: тонкая дуга в 320° почти смыкалась, и стрелка
-             сливалась с ней в кляксу. Теперь разрыв шире, обводка толще, знак
-             рисуется в 16px, а основание стрелки отодвинуто назад на 1,3 —
-             иначе круглый колпачок дуги торчит из-под неё. -->
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-          <path d="M12.70 6.29 A5.0 5.0 0 1 1 4.79 4.17" fill="none" stroke="currentColor" stroke-width="2.0" stroke-linecap="round"/>
-          <path d="M7.39 1.98 5.20 6.69 2.38 3.32Z" fill="currentColor"/>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+          <path d="M19.9331 13.041C19.7442 14.481 19.167 15.8424 18.2632 16.9792C17.3595 18.116 16.1633 18.9854 14.803 19.4941C13.4427 20.0027 11.9696 20.1315 10.5417 19.8666C9.1138 19.6017 7.78492 18.9531 6.69761 17.9904C5.6103 17.0276 4.80557 15.787 4.36973 14.4017C3.93389 13.0164 3.88338 11.5385 4.22362 10.1266C4.56385 8.71476 5.282 7.42214 6.30104 6.3874C7.32007 5.35266 8.60156 4.61483 10.0081 4.25304C13.9071 3.25304 17.9431 5.26004 19.4331 9.00004M20 4V9H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>Сбросить</span>
       </button>
@@ -206,6 +200,6 @@
 </div>
 <div class="scrim" id="scrim" hidden></div>
 
-<script type="module" src="js/app.js?v=63"></script>
+<script type="module" src="js/app.js?v=64"></script>
 </body>
 </html>

@@ -671,7 +671,7 @@ async function suiteContent(p) {
   check(r.afterRecovery && r.beforeFooter && r.inMain, 'блок источника не между возвратом к норме и подвалом');
   check(r.srcRight <= r.iw, 'блок источника за краем');
   check(!r.stale, 'на странице осталось «Лучшее время»');
-  check(r.icon.w === '16' && r.icon.paths === 2 && r.icon.stroke === '2.0', 'знак сброса: ' + JSON.stringify(r.icon));
+  check(r.icon.w === '16' && r.icon.paths === 1 && r.icon.stroke === '2', 'знак сброса: ' + JSON.stringify(r.icon));
 
   /* источник меняется по сценарию и честно говорит, когда его нет */
   r = await p.eval(`(async () => {
