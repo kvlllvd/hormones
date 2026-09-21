@@ -538,7 +538,6 @@ function paintLevels() {
       card.classList.toggle('is-flat', !eff);
     }
   });
-  if (state.active) updateDetailNow();
 }
 
 function setActive(id) {
@@ -798,23 +797,6 @@ function showDetail(id, anchor) {
   const base = baseline(state.sex, state.age, id);
   const sexTitle = SEXES.find(s => s.id === state.sex).title.toLowerCase();
   const ageTitle = AGES.find(a => a.id === state.age).title;
-  const dual = state.sexes.length > 1;
-
-  const nowRows = dual
-    ? `<div class="detail-now detail-now--dual" id="detailNow">${state.sexes.map(s => {
-        const e = effFor(s, id);
-        return `<span class="detail-duo detail-duo--${s}" data-s="${s}">
-          <i>${SEX_LABEL[s]}</i>
-          <b class="mono">${e ? formatDelta(levelAt(e, state.t)) : 'норма'}</b></span>`;
-      }).join('')}<span class="detail-now-l" id="detailNowL">сейчас, через ${state.t < 1 ? 'момент' : formatClock(state.t)}</span></div>`
-    : (() => {
-        const eff = state.sc.byId[id];
-        const lvl = eff ? levelAt(eff, state.t) : 1;
-        return `<div class="detail-now" id="detailNow">
-          <span class="detail-now-v" id="detailNowV">${eff ? formatDelta(lvl) : 'норма'}</span>
-          <span class="detail-now-l" id="detailNowL">${eff ? 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t)) : 'в этом сценарии не меняется'}</span>
-        </div>`;
-      })();
 
   const note = state.sexes.map(s => effFor(s, id)).find(e => e && e.note);
 
@@ -823,7 +805,6 @@ function showDetail(id, anchor) {
       <div class="detail-name">${h.name}</div>
       <div class="detail-latin">${h.latin} · ${h.role.toLowerCase()}</div>
     </div>
-    ${nowRows}
     ${note ? `<p class="detail-note">${note.note}</p>` : ''}
     <div class="detail-sec"><h4>За что отвечает</h4><p>${h.what}</p></div>
     <div class="detail-sec"><h4>Где и как вырабатывается</h4><p>${h.where}</p></div>
@@ -845,26 +826,6 @@ function showDetail(id, anchor) {
     d.style.left = left + 'px';
     d.style.top = Math.max(12, Math.min(innerHeight - dh - 12, r.top - 8)) + 'px';
   }
-}
-
-function updateDetailNow() {
-  if (!state.active || $('detail').hidden) return;
-  const l = $('detailNowL');
-  const stamp = 'сейчас, через ' + (state.t < 1 ? 'момент' : formatClock(state.t));
-  const duos = document.querySelectorAll('.detail-duo');
-  if (duos.length) {
-    duos.forEach(d => {
-      const e = effFor(d.dataset.s, state.active);
-      d.querySelector('b').textContent = e ? formatDelta(levelAt(e, state.t)) : 'норма';
-    });
-    if (l) l.textContent = stamp;
-    return;
-  }
-  const v = $('detailNowV');
-  const eff = state.sc.byId[state.active];
-  if (!v || !eff) return;
-  v.textContent = formatDelta(levelAt(eff, state.t));
-  if (l) l.textContent = stamp;
 }
 
 function hideDetail() {
