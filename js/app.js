@@ -281,7 +281,17 @@ function chipLabel(s) {           // вместо подзаголовка по�
 
 function renderChips() {
   const host = $('chips'); host.innerHTML = '';
-  SITUATIONS.filter(s => s.cat === state.cat).forEach(s => {
+  const list = SITUATIONS.filter(s => s.cat === state.cat);
+  const grouped = list.some(s => s.sub);  // точки-разделители нужны только там, где есть подразделы
+  let group = null;
+  list.forEach(s => {
+    const g = s.sub || s.id;              // группы внутри категории: зарядка, зал, велосипед, плавание
+    if (grouped && group !== null && g !== group) {
+      const sep = document.createElement('span');
+      sep.className = 'chip-dot'; sep.textContent = '\u00B7'; sep.setAttribute('aria-hidden', 'true');
+      host.appendChild(sep);
+    }
+    group = g;
     const b = document.createElement('button');
     b.className = 'chip'; b.type = 'button'; b.role = 'tab';
     b.textContent = chipLabel(s);

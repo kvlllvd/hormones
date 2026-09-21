@@ -261,6 +261,8 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .cat[aria-selected="true"]::before{visibility:visible}
 .cat:hover{color:var(--ink-2)}
 .cat[aria-selected="true"]{color:var(--ink); font-weight:600}
+/* Точка разделяет группы активностей внутри ряда чипов. */
+.chip-dot{flex:0 0 auto; align-self:center; padding:0 6px; color:var(--ink-3)}
 /* На десктопе чипы подразделов мельче разделов; на телефоне размер свой — 13px. */
 .chip{
   flex:none; padding:5px 11px; border-radius:100px; font-size:13px; background:var(--surface);
