@@ -692,7 +692,7 @@ async function suiteContent(p) {
     const warn = document.getElementById('footWarn'), btn = document.getElementById('footMore');
     const restHidden = getComputedStyle(document.querySelector('.foot-warn-rest')).display;
     btn.click();
-    const open = document.querySelector('.foot-warn-rest').textContent;
+    const open = [...document.querySelectorAll('.foot-warn-rest')].map(e => e.textContent).join(' ');
     const shown = getComputedStyle(document.querySelector('.foot-warn-rest')).display;
     btn.click();
     return { restHidden, shown, label: btn.textContent,
@@ -708,13 +708,14 @@ async function suiteContent(p) {
   await p.goto(BASE + '?p=m-a26#water');
   r = await p.eval(`(() => {
     const chips = [...document.querySelectorAll('#chips .chip')].map(c => c.textContent);
-    return { chips, last: chips[chips.length - 1], name: document.getElementById('sitName').textContent,
+    return { chips, first: chips[0], name: document.getElementById('sitName').textContent,
       dose: document.getElementById('dose').textContent, doseHidden: document.getElementById('dose').hidden,
       cards: document.querySelectorAll('#hormones .hcard').length,
       timing: document.getElementById('timingText').textContent.length,
       cat: document.getElementById('sitTag').textContent };
   })()`);
-  check(r.last === 'Вода' && r.name === 'Вода', 'воды нет последним чипом в «Питании»: ' + JSON.stringify(r.chips));
+  /* Вода открывает «Питание»: её пьют раньше любой еды, и группа у неё своя. */
+  check(r.first === 'Вода' && r.name === 'Вода', 'воды нет первым чипом в «Питании»: ' + JSON.stringify(r.chips));
   check(r.cat === 'Питание', 'вода не в «Питании»: ' + r.cat);
   check(!r.doseHidden && /300 мл/.test(r.dose), 'у воды нет дозы: ' + r.dose);
   check(r.cards === 3, 'у воды ' + r.cards + ' карточек гормонов вместо 3');
