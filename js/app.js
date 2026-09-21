@@ -272,19 +272,20 @@ function renderCats() {
   });
 }
 
+const SUB_EMOJI = { 'Зал': '\u{1F3CB}\u{FE0F}\u{200D}\u{2640}\u{FE0F}', 'Велосипед': '\u{1F6B4}', 'Плавание': '\u{1F3CA}' };
+
+function chipLabel(s) {           // вместо подзаголовка подраздела — эмодзи прямо в чипе
+  const text = (s.short || s.name).replace(' минут', ' мин');
+  const emoji = SUB_EMOJI[s.sub];
+  return emoji ? `${emoji} \u00B7 ${text}` : text;
+}
+
 function renderChips() {
   const host = $('chips'); host.innerHTML = '';
-  let sub = null;
   SITUATIONS.filter(s => s.cat === state.cat).forEach(s => {
-    if (s.sub && s.sub !== sub) {           // подразделы внутри категории: зал, велосипед, плавание
-      sub = s.sub;
-      const sep = document.createElement('span');
-      sep.className = 'chip-sub'; sep.textContent = sub; sep.setAttribute('aria-hidden', 'true');
-      host.appendChild(sep);
-    }
     const b = document.createElement('button');
     b.className = 'chip'; b.type = 'button'; b.role = 'tab';
-    b.textContent = s.short || s.name;   // под подзаголовком подраздела длинное имя избыточно
+    b.textContent = chipLabel(s);
     b.setAttribute('aria-selected', s.id === state.sit);
     b.onclick = () => selectSituation(s.id);
     host.appendChild(b);

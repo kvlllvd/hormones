@@ -261,13 +261,6 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .cat[aria-selected="true"]::before{visibility:visible}
 .cat:hover{color:var(--ink-2)}
 .cat[aria-selected="true"]{color:var(--ink); font-weight:600}
-/* Подпись подраздела идёт в потоке вместе с чипами, а не отдельной строкой:
-   так ряды заполняются целиком и не остаётся пустого места справа. */
-.chip-sub{
-  flex:0 0 auto; align-self:center; font-size:10px; letter-spacing:.07em;
-  text-transform:uppercase; color:var(--ink-3); padding:0 2px 0 8px; white-space:nowrap;
-}
-.chips > .chip-sub:first-child{padding-left:0}
 /* На десктопе чипы подразделов мельче разделов; на телефоне размер свой — 13px. */
 .chip{
   flex:none; padding:5px 11px; border-radius:100px; font-size:13px; background:var(--surface);
@@ -694,7 +687,6 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .chips{gap:5px; padding:0 0 6px}
   .cat{padding:3px 0; font-size:13px}
   .chip{padding:6px 11px; font-size:13px}
-  .chip-sub{flex:1 0 100%; padding:9px 0 3px}
   .nav-hint{
     display:block; position:sticky; bottom:0; margin-top:18px; padding:14px;
     border-radius:14px; background:var(--ink); color:var(--on-ink);
