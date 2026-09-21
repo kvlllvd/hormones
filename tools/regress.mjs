@@ -752,7 +752,7 @@ async function suiteContent(p) {
     foot: document.querySelector('.foot-meta').textContent.match(/\\d+ сценариев/)?.[0],
     cnt: document.getElementById('cntAll').textContent,
   }))()`);
-  check(r.meta === '48 жизненных' && r.og === '48 сценариев' && r.foot === '48 сценариев', 'счётчики: ' + JSON.stringify(r));
+  check(r.meta === '49 жизненных' && r.og === '49 сценариев' && r.foot === '49 сценариев', 'счётчики: ' + JSON.stringify(r));
   check(r.cnt === '21', 'счётчик гормонов: ' + r.cnt);
   if (p.errors.length) bad.push('✗ консоль: ' + p.errors.join(' | '));
   return bad;
