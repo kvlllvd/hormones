@@ -276,7 +276,7 @@ const SUB_EMOJI = { 'Зал': '\u{1F3CB}\u{FE0F}\u{200D}\u{2640}\u{FE0F}', 'Ве
 function chipLabel(s) {           // вместо подзаголовка подраздела — эмодзи прямо в чипе
   const text = (s.short || s.name).replace(' минут', ' мин');
   const emoji = SUB_EMOJI[s.sub];
-  return emoji ? `${emoji} \u00B7 ${text}` : text;
+  return emoji ? `${emoji} \u00A0\u00B7\u00A0 ${text}` : text;
 }
 
 function renderChips() {
