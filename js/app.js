@@ -282,11 +282,13 @@ function chipLabel(s) {           // вместо подзаголовка по�
 function renderChips() {
   const host = $('chips'); host.innerHTML = '';
   const list = SITUATIONS.filter(s => s.cat === state.cat);
-  const grouped = list.some(s => s.sub);  // точки-разделители нужны только там, где есть подразделы
+  const grouped = list.some(s => s.sub || s.brk);   // точки нужны только там, где группы размечены
   let group = null;
   list.forEach(s => {
-    const g = s.sub || s.id;              // группы внутри категории: зарядка, зал, велосипед, плавание
-    if (grouped && group !== null && g !== group) {
+    /* Группа — либо подраздел (зал, велосипед, плавание), либо явная метка brk
+       на первом сценарии новой группы (питание, близость, вещества). */
+    const g = s.sub || '';
+    if (grouped && group !== null && (s.brk || g !== group)) {
       const sep = document.createElement('span');
       sep.className = 'chip-dot'; sep.textContent = '\u00B7'; sep.setAttribute('aria-hidden', 'true');
       host.appendChild(sep);
