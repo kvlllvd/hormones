@@ -196,7 +196,7 @@ async function suiteBehaviour(p) {
       popHidden: document.getElementById('profilePop').hidden,
       iconbtn: [...document.querySelectorAll('.iconbtn')].map(b => Math.round(b.offsetWidth)),
       iconbtnPad: getComputedStyle(document.querySelector('.iconbtn'), '::after').inset,
-      labels: { blurb: document.getElementById('blurbMore').textContent, timing: document.getElementById('timingMore').textContent, foot: document.getElementById('footMore').textContent },
+      labels: { timing: document.getElementById('timingMore').textContent, foot: document.getElementById('footMore').textContent },
       english: document.body.innerText.match(/\\b(More|Less)\\b/g),
       playBtn: !!document.querySelector('.play, #playBtn'),
     };
