@@ -271,12 +271,17 @@ function renderCats() {
   });
 }
 
-const SUB_EMOJI = { 'Зал': '\u{1F3CB}\u{FE0F}\u{200D}\u{2640}\u{FE0F}', 'Велосипед': '\u{1F6B4}', 'Плавание': '\u{1F3CA}' };
+/* Приставка группы в чипе: вместо отдельного подзаголовка ряда. */
+const SUB_PREFIX = { 'Зал': 'силовые', 'Велосипед': 'вел', 'Плавание': 'плавание' };
 
-function chipLabel(s) {           // вместо подзаголовка подраздела — эмодзи прямо в чипе
-  const text = (s.short || s.name).replace(' минут', ' мин');
-  const emoji = SUB_EMOJI[s.sub];
-  return emoji ? `${emoji} \u00A0\u00B7\u00A0 ${text}` : text;
+function chipLabel(s) {
+  let text = (s.short || s.name).replace(' минут', ' мин');
+  const prefix = SUB_PREFIX[s.sub];
+  if (!prefix) return text;
+  /* Плавание в данных в метрах, в чипе — в километрах, как у велосипеда. */
+  const m = text.match(/^(\d+) м$/);
+  if (m) text = (+m[1] / 1000).toFixed(1).replace(/[.,]0$/, '').replace('.', ',') + ' км';
+  return `${prefix} \u00A0\u00B7\u00A0 ${text}`;
 }
 
 function renderChips() {
