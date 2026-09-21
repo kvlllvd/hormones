@@ -246,7 +246,7 @@ main{max-width:1080px; margin:0 auto; padding:0 var(--pad) 0}
 .nav-top{display:none}
 /* Ситуации переносятся на столько строк, сколько нужно: без скрытого скролла. */
 .cats{display:flex; flex-wrap:wrap; gap:4px 20px; padding:6px 0 4px}
-.chips{display:flex; flex-wrap:wrap; gap:5px; padding:6px 0 0}
+.chips{display:flex; flex-wrap:wrap; gap:5px; padding:10px 0 0}
 .cat{
   flex:none; display:inline-flex; align-items:center; gap:4px;
   padding:3px 0; font-size:13px; font-weight:400; letter-spacing:-.01em;
