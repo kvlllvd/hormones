@@ -349,8 +349,8 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 .time-caption{font-size:12.5px; color:var(--ink-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 /* Доза сценария: на чём посчитана кривая. Стоит между «Сбросить» и отклонением. */
 .dose{
-  flex:none; max-width:42%; padding:5px 10px; border-radius:100px; background:var(--surface-2);
-  color:var(--ink-2); font-size:11.5px; line-height:1.25; letter-spacing:-.01em;
+  flex:none; max-width:42%;
+  color:var(--ink-3); font-size:11.5px; line-height:1.25; letter-spacing:-.01em;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .reset{
