@@ -120,6 +120,17 @@ async function suiteChart(p) {
       /* Шапка графика: доза стояла в одной строке со временем и на узком
          экране налезала прямо на цифры. Теперь она уходит на свою строку —
          проверяем, что цифры и доза не пересекаются и текст не обрезан. */
+      /* Источник бывает на десяток строк: в свёрнутом виде их должно быть
+         три, кнопка — только там, где текст правда не влез. */
+      src: (() => {
+        const t = document.getElementById('sourceText'), b = document.getElementById('sourceMore');
+        const lh = parseFloat(getComputedStyle(t).lineHeight);
+        return {
+          open: document.getElementById('source').classList.contains('is-open'),
+          btnHidden: b.hidden, lines: Math.round(t.clientHeight / lh),
+          hidden: t.scrollHeight - t.clientHeight,
+        };
+      })(),
       head: (() => {
         const d = document.getElementById('dose');
         if (d.hidden) return null;
@@ -156,6 +167,10 @@ async function suiteChart(p) {
       if (!r.hormones) problems.push(`${key} ${s.id}: пустой список гормонов`);
       if (r.head && r.head.sameLine && r.head.gap < 4) problems.push(`${key} ${s.id}: доза налезает на время — зазор ${r.head.gap}px`);
       if (r.head && r.head.clipped > 0) problems.push(`${key} ${s.id}: доза обрезана на ${r.head.clipped}px`);
+      if (r.src.open) problems.push(`${key} ${s.id}: источник остался раскрытым после смены сценария`);
+      if (r.src.lines > 3) problems.push(`${key} ${s.id}: источник свёрнут в ${r.src.lines} строки вместо трёх`);
+      if (r.src.btnHidden && r.src.hidden > 1) problems.push(`${key} ${s.id}: источник обрезан на ${r.src.hidden}px, а кнопки «Ещё» нет`);
+      if (!r.src.btnHidden && r.src.hidden <= 1) problems.push(`${key} ${s.id}: кнопка «Ещё» у источника, который и так влез`);
       stat[key].marks += r.marks;
       if (r.outMarks.length) { stat[key].outMarks += r.outMarks.length; problems.push(`${key} ${s.id}: метка за полем — ${r.outMarks.join(', ')}`); }
       if (r.labelOut) { stat[key].labelOut++; problems.push(`${key} ${s.id}: подпись кривой за полем — ${r.labelOut}`); }
@@ -719,6 +734,27 @@ async function suiteContent(p) {
   check(r.restHidden === 'none', 'свёрнутая оговорка показывает лишнее');
   check(r.shown !== 'none', 'оговорка не раскрылась');
   check(r.hasAge && r.hasDose && r.hasRecovery, 'в оговорке нет новых фраз: ' + JSON.stringify(r));
+
+  /* Раскрытая кнопка оговорки стояла на 7px левее своей колонки и на узком
+     экране залезала в поле страницы — теперь её край совпадает с текстом. */
+  for (const [w, mob] of [[1280, false], [390, true], [320, true]]) {
+    await p.viewport(w, mob ? 844 : 900, mob);
+    await p.goto(BASE + '?p=m-a26#caffeine');
+    const a = await p.eval(`(async () => {
+      const warn = document.getElementById('footWarn'), btn = document.getElementById('footMore');
+      /* обработчики вешаются после загрузки модуля — ждём, пока кнопка оживёт */
+      for (let i = 0; i < 25 && !warn.classList.contains('is-open'); i++) {
+        btn.click();
+        if (!warn.classList.contains('is-open')) await new Promise(r => setTimeout(r, 120));
+      }
+      return { open: warn.classList.contains('is-open'),
+        delta: Math.round(btn.getBoundingClientRect().left - warn.getBoundingClientRect().left) };
+    })()`);
+    check(a.open, w + 'px: оговорка не раскрылась');
+    check(a.delta >= 0, w + 'px: кнопка оговорки левее своей колонки на ' + (-a.delta) + 'px');
+  }
+  await p.viewport(1280, 900, false);
+  await p.goto(BASE + '?p=m-a26#caffeine');
 
   /* вода на месте, с дозой и тремя гормонами */
   await p.goto(BASE + '?p=m-a26#water');

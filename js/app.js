@@ -1,10 +1,10 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=47';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE, SOURCES } from './situations.js?v=47';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=47';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=70';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE, SOURCES } from './situations.js?v=70';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=70';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=47';
+} from './engine.js?v=70';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -220,6 +220,7 @@ function hideMenuHint() {
 /* Кнопка нужна, только если текст действительно не влез в три строки:
    на широком экране обрезки нет вовсе, и кнопка сама остаётся скрытой. */
 function syncTiming() { collapse($('timingText'), $('timingMore'), $('timing')); }
+function syncSource() { collapse($('sourceText'), $('sourceMore'), $('source')); }
 
 /* Сворачиваем текст и решаем, нужна ли кнопка: если он и так влез, она лишняя.
    На широком экране обрезки нет вовсе, и кнопка сама остаётся скрытой. */
@@ -424,6 +425,7 @@ function renderRecovery(sit) {
   $('recoveryText').textContent = sit.recovery;
   $('timingText').textContent = TIMING[sit.id] || '';
   syncTiming();
+  syncSource();
   const rows = [...state.sc.effects].sort((a, b) => b.tEnd - a.tEnd).slice(0, 6);
   $('recoveryList').innerHTML = rows.map(e => {
     const h = HORMONE_BY_ID[e.id];
@@ -909,6 +911,13 @@ function bind() {
     tmore.textContent = open ? 'Скрыть' : 'Ещё';
   };
 
+  const smore = $('sourceMore');
+  smore.onclick = () => {
+    const open = $('source').classList.toggle('is-open');
+    smore.setAttribute('aria-expanded', open);
+    smore.textContent = open ? 'Скрыть' : 'Ещё';
+  };
+
   const more = $('footMore');
   more.onclick = () => {
     const open = $('footWarn').classList.toggle('is-open');
@@ -971,6 +980,7 @@ function bind() {
       placeProfile();
       placeTheme();
       syncTiming();
+      syncSource();
       syncChip();
       drawChart();
       if (state.tipPinned) renderTip(playheadX());
@@ -1000,7 +1010,7 @@ placeProfile();
 placeTheme();
 loadTheme();
 /* Пока шрифт не приехал, замер подписей идёт по запасному — перерисовываем. */
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncTiming(); syncChip(); drawChart(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncTiming(); syncSource(); syncChip(); drawChart(); });
 if (state.sex || loadProfile()) {
   state.sexesOn = new Set([state.sex]);
   applyProfile();
