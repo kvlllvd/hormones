@@ -747,12 +747,12 @@ async function suiteContent(p) {
 
   /* счётчики */
   r = await p.eval(`(() => ({
-    meta: document.querySelector('meta[name=description]').content.match(/\\d+ жизненных/)?.[0],
-    og: document.querySelector('meta[property="og:description"]').content.match(/\\d+ сценариев/)?.[0],
-    foot: document.querySelector('.foot-meta').textContent.match(/\\d+ сценариев/)?.[0],
+    meta: document.querySelector('meta[name=description]').content.match(/(\\d+) жизненн/)?.[1],
+    og: document.querySelector('meta[property="og:description"]').content.match(/(\\d+) сценари/)?.[1],
+    foot: document.querySelector('.foot-meta').textContent.match(/(\\d+) сценари/)?.[1],
     cnt: document.getElementById('cntAll').textContent,
   }))()`);
-  check(r.meta === '50 жизненных' && r.og === '50 сценариев' && r.foot === '50 сценариев', 'счётчики: ' + JSON.stringify(r));
+  check(r.meta === '51' && r.og === '51' && r.foot === '51', 'счётчики: ' + JSON.stringify(r));
   check(r.cnt === '21', 'счётчик гормонов: ' + r.cnt);
   if (p.errors.length) bad.push('✗ консоль: ' + p.errors.join(' | '));
   return bad;
