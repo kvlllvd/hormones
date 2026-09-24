@@ -117,6 +117,20 @@ async function suiteChart(p) {
       recovery: document.getElementById('recoveryList').children.length,
       hormones: document.getElementById('hormones').children.length,
       dose: document.getElementById('dose').hidden ? '' : document.getElementById('dose').textContent,
+      /* Шапка графика: доза стояла в одной строке со временем и на узком
+         экране налезала прямо на цифры. Теперь она уходит на свою строку —
+         проверяем, что цифры и доза не пересекаются и текст не обрезан. */
+      head: (() => {
+        const d = document.getElementById('dose');
+        if (d.hidden) return null;
+        const db = d.getBoundingClientRect();
+        const vb = document.getElementById('timeValue').getBoundingClientRect();
+        return {
+          sameLine: Math.abs(vb.top - db.top) < 8,
+          gap: Math.round(db.left - vb.right),
+          clipped: d.scrollWidth - d.clientWidth,
+        };
+      })(),
       name: document.getElementById('sitName').textContent,
       tip: !document.getElementById('chartTip').hidden,
     };
@@ -140,6 +154,8 @@ async function suiteChart(p) {
       if (r.stats !== 3) problems.push(`${key} ${s.id}: плашек показателей ${r.stats}`);
       if (!r.recovery) problems.push(`${key} ${s.id}: пустой список возврата`);
       if (!r.hormones) problems.push(`${key} ${s.id}: пустой список гормонов`);
+      if (r.head && r.head.sameLine && r.head.gap < 4) problems.push(`${key} ${s.id}: доза налезает на время — зазор ${r.head.gap}px`);
+      if (r.head && r.head.clipped > 0) problems.push(`${key} ${s.id}: доза обрезана на ${r.head.clipped}px`);
       stat[key].marks += r.marks;
       if (r.outMarks.length) { stat[key].outMarks += r.outMarks.length; problems.push(`${key} ${s.id}: метка за полем — ${r.outMarks.join(', ')}`); }
       if (r.labelOut) { stat[key].labelOut++; problems.push(`${key} ${s.id}: подпись кривой за полем — ${r.labelOut}`); }
