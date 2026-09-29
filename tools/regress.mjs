@@ -17,6 +17,7 @@
    краем намеренно и в переполнение не считается. */
 import { connect } from './cdp.mjs';
 import { SITUATIONS } from '../js/situations.js';
+import { CYCLE_VIEWS } from '../js/cycle.js';
 
 const BASE = process.env.URL || 'http://localhost:8777/index.html';
 const URL = BASE;
@@ -178,6 +179,86 @@ async function suiteChart(p) {
       if (p.errors.length) { problems.push(`${key} ${s.id}: ${p.errors.join(' | ')}`); p.errors.length = 0; }
     }
   }
+  /* Цикл: те же замеры плюс своё — две карточки рекомендации, описание
+     вместо списка возврата, свой набор гормонов без переключателя «Все»,
+     розовый фон в светлой теме и карточка «ему» первой у мужского профиля. */
+  for (const [w, h, mob] of [[1280, 900, false], [390, 844, true], [320, 700, true]]) {
+    for (const prof of ['m-a26', 'f-a26']) {
+      await p.viewport(w, h, mob);
+      await p.goto(BASE + '?p=' + prof + '#cycle');
+      const key = w + 'px ' + prof;
+      for (const v of CYCLE_VIEWS) {
+        await p.eval(`location.hash = '#${v.id}'`);
+        await p.wait(90);
+        let r;
+        try {
+          r = await p.eval(PROBE);
+          r.cyc = await p.eval(`(() => {
+            const t1 = document.getElementById('timing'), t2 = document.getElementById('timing2');
+            return {
+              t2: !t2.hidden && (document.getElementById('timing2Text').textContent || '').trim().length,
+              t2More: document.getElementById('timing2More').hidden,
+              t2Clip: (() => { const x = document.getElementById('timing2Text'); return x.scrollHeight - x.clientHeight; })(),
+              himFirst: t2.getBoundingClientRect().top < t1.getBoundingClientRect().top - 1 || t2.getBoundingClientRect().left < t1.getBoundingClientRect().left - 1,
+              listHidden: document.getElementById('recoveryList').hidden,
+              feel: (document.getElementById('recoveryText').textContent || '').trim().length,
+              filter: document.querySelector('.hfilter').hidden,
+              cards: [...document.querySelectorAll('.hcard')].map(c => c.dataset.h),
+              bg: getComputedStyle(document.body).backgroundColor,
+              day: document.getElementById('timeValue').textContent,
+            };
+          })()`);
+        } catch (e) { problems.push(`${key} ${v.id}: ${e.message}`); continue; }
+        if (r.fail) { problems.push(`${key} ${v.id}: ${r.fail}`); continue; }
+        const c = r.cyc;
+        if (r.name !== v.name) problems.push(`${key} ${v.id}: заголовок «${r.name}» вместо «${v.name}»`);
+        if (r.overflow) problems.push(`${key} ${v.id}: переполнение ${r.overflow}`);
+        if (!r.timing || !c.t2) problems.push(`${key} ${v.id}: нет одной из двух рекомендаций`);
+        if (c.t2More && c.t2Clip > 1) problems.push(`${key} ${v.id}: рекомендация ему обрезана без кнопки «Ещё»`);
+        if (c.himFirst !== prof.startsWith('m')) problems.push(`${key} ${v.id}: не та карточка первой`);
+        if (!c.listHidden) problems.push(`${key} ${v.id}: остался список возврата к норме`);
+        if (!c.feel) problems.push(`${key} ${v.id}: нет описания самочувствия`);
+        if (!c.filter) problems.push(`${key} ${v.id}: остался переключатель «Все»`);
+        if (!c.cards.includes('lh') || !c.cards.includes('fsh')) problems.push(`${key} ${v.id}: нет ЛГ или ФСГ`);
+        if (c.bg !== 'rgb(255, 249, 255)') problems.push(`${key} ${v.id}: фон ${c.bg}`);
+        if (c.day !== 'день ' + v.t0) problems.push(`${key} ${v.id}: стартовый день «${c.day}» вместо ${v.t0}`);
+        if (!r.source) problems.push(`${key} ${v.id}: не сказано, откуда данные`);
+        if (r.stats !== 3) problems.push(`${key} ${v.id}: плашек показателей ${r.stats}`);
+        if (r.src.lines > 3) problems.push(`${key} ${v.id}: источник свёрнут в ${r.src.lines} строки вместо трёх`);
+        if (r.src.btnHidden && r.src.hidden > 1) problems.push(`${key} ${v.id}: источник обрезан без кнопки «Ещё»`);
+        if (r.head && r.head.sameLine && r.head.gap < 4) problems.push(`${key} ${v.id}: подпись модели налезает на день — зазор ${r.head.gap}px`);
+        if (r.outMarks.length) problems.push(`${key} ${v.id}: метка за полем — ${r.outMarks.join(', ')}`);
+        if (r.labelOut) problems.push(`${key} ${v.id}: подпись кривой за полем — ${r.labelOut}`);
+        if (r.labelHit) problems.push(`${key} ${v.id}: подпись накрывает точку — ${r.labelHit}`);
+        if (p.errors.length) { problems.push(`${key} ${v.id}: ${p.errors.join(' | ')}`); p.errors.length = 0; }
+      }
+      /* Выход из цикла: фон, ползунок и общий список гормонов возвращаются,
+         а ЛГ и ФСГ в обычных сценариях не появляются даже в режиме «Все». */
+      await p.eval(`location.hash = '#sleep'`); await p.wait(90);
+      await p.eval(`document.getElementById('segAll').click()`); await p.wait(60);
+      const back = await p.eval(`({
+        bg: getComputedStyle(document.body).backgroundColor,
+        max: document.getElementById('scrub').max,
+        cards: [...document.querySelectorAll('.hcard')].map(c => c.dataset.h),
+        t2: document.getElementById('timing2').hidden,
+      })`);
+      if (back.bg === 'rgb(255, 249, 255)') problems.push(`${key}: розовый фон остался после выхода из цикла`);
+      if (back.max !== '1000') problems.push(`${key}: ползунок остался в днях после выхода из цикла`);
+      if (back.cards.includes('lh') || back.cards.includes('fsh')) problems.push(`${key}: ЛГ или ФСГ в обычном сценарии`);
+      if (back.cards.length !== 21) problems.push(`${key}: в «Все» ${back.cards.length} гормонов вместо 21`);
+      if (!back.t2) problems.push(`${key}: вторая карточка рекомендации осталась в обычном сценарии`);
+      await p.eval(`document.getElementById('segActive').click()`);
+    }
+  }
+
+  /* Тёмная тема в цикле — без розового. */
+  await p.viewport(1280, 900, false);
+  await p.goto(BASE + '?p=f-a26#cycle');
+  await p.eval(`document.getElementById('themeBtn').click()`); await p.wait(60);
+  const dark = await p.eval(`getComputedStyle(document.body).backgroundColor`);
+  if (dark === 'rgb(255, 249, 255)') problems.push('тёмная тема в цикле осталась розовой');
+  await p.eval(`document.getElementById('themeBtn').click()`);
+
   console.log('  метки и подписи:', JSON.stringify(stat));
   return problems.map(x => '✗ ' + x);
 }

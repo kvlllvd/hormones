@@ -1,10 +1,11 @@
-import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=70';
-import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE, SOURCES } from './situations.js?v=70';
-import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=70';
+import { HORMONES, HORMONE_BY_ID, GROUPS } from './data.js?v=71';
+import { SITUATIONS, SITUATION_BY_ID, CATEGORIES, PHASES, TIMING, COMPARE, DOSE, SOURCES } from './situations.js?v=71';
+import { CYCLE_CAT, CYCLE_VIEWS, CYCLE_BY_ID, CYCLE_PHASES, CYCLE_DAYS, CYCLE_DOSE, CYCLE_AGE_NOTE, cycleScenario, phaseAt } from './cycle.js?v=71';
+import { SEXES, AGES, profileFactors, baseline } from './profile.js?v=71';
 import {
   buildScenario, levelAt, peakMoment, amplitude,
   toLog, invLog, formatDuration, formatClock, formatDelta, extreme, TICKS,
-} from './engine.js?v=70';
+} from './engine.js?v=71';
 
 const $ = (id) => document.getElementById(id);
 const STORE = 'hormones.profile.v1';
@@ -13,6 +14,14 @@ const RESTORATIVE = new Set(['sleep', 'morninglight', 'meditation', 'hug']);
 const isTouch = matchMedia('(hover: none)').matches;
 const isSheet = () => matchMedia('(max-width: 720px)').matches;
 const SEX_LABEL = { m: 'М', f: 'Ж' };
+
+/* Цикл — раздел со своими видами, гормонами и осью по дням. Он стоит
+   последним и в общий счёт сценариев не входит, поэтому живёт отдельным
+   списком, а искать вид по id удобнее в одном месте. */
+const CATS = [...CATEGORIES, CYCLE_CAT];
+const VIEW = (id) => SITUATION_BY_ID[id] || CYCLE_BY_ID[id];
+const viewsIn = (cat) => (cat === CYCLE_CAT.id ? CYCLE_VIEWS : SITUATIONS.filter(s => s.cat === cat));
+const isCycle = () => state.cat === CYCLE_CAT.id;
 
 let neverConfigured = true;
 
@@ -153,8 +162,15 @@ function applyTheme(dark) {
   btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
   btn.setAttribute('aria-label', label);
   btn.title = label;
+  syncThemeColor();
+}
+/* Цвет строки состояния на телефоне повторяет фон страницы, а у цикла
+   в светлой теме он свой. */
+function syncThemeColor() {
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = dark ? '#0F0F11' : '#F5F5F3';
+  if (!meta) return;
+  const dark = document.documentElement.dataset.theme === 'dark';
+  meta.content = dark ? '#0F0F11' : (document.documentElement.dataset.mode === 'cycle' ? '#FFF9FF' : '#F5F5F3');
 }
 function toggleTheme() {
   const dark = document.documentElement.dataset.theme !== 'dark';
@@ -219,7 +235,10 @@ function hideMenuHint() {
    под неё: пока заголовок виден, чип дублировал бы его. */
 /* Кнопка нужна, только если текст действительно не влез в три строки:
    на широком экране обрезки нет вовсе, и кнопка сама остаётся скрытой. */
-function syncTiming() { collapse($('timingText'), $('timingMore'), $('timing')); }
+function syncTiming() {
+  collapse($('timingText'), $('timingMore'), $('timing'));
+  if (!$('timing2').hidden) collapse($('timing2Text'), $('timing2More'), $('timing2'));
+}
 function syncSource() { collapse($('sourceText'), $('sourceMore'), $('source')); }
 
 /* Сворачиваем текст и решаем, нужна ли кнопка: если он и так влез, она лишняя.
@@ -258,15 +277,14 @@ function unlockScroll(force) {
 
 function renderCats() {
   const host = $('cats'); host.innerHTML = '';
-  CATEGORIES.forEach(c => {
+  CATS.forEach(c => {
     const b = document.createElement('button');
     b.className = 'cat'; b.type = 'button'; b.role = 'tab';
     b.textContent = c.title;
     b.setAttribute('aria-selected', c.id === state.cat);
     b.onclick = () => {
       state.cat = c.id;
-      const first = SITUATIONS.find(s => s.cat === c.id);
-      selectSituation(first.id, true);
+      selectSituation(viewsIn(c.id)[0].id, true);
     };
     host.appendChild(b);
   });
@@ -287,7 +305,7 @@ function chipLabel(s) {
 
 function renderChips() {
   const host = $('chips'); host.innerHTML = '';
-  const list = SITUATIONS.filter(s => s.cat === state.cat);
+  const list = viewsIn(state.cat);
   const grouped = list.some(s => s.sub || s.brk);   // точки нужны только там, где группы размечены
   let group = null;
   list.forEach(s => {
@@ -311,7 +329,7 @@ function renderChips() {
 
 function selectSituation(id, keepNav) {
   state.sit = id;
-  state.cat = SITUATION_BY_ID[id].cat;
+  state.cat = VIEW(id).cat;
   state.pinned = null; state.active = null;
   state.sexesOn = new Set([state.sex]);
   hideMenuHint();
@@ -332,8 +350,16 @@ function activeSexes() {
 }
 
 function buildScenarios() {
-  const sit = SITUATION_BY_ID[state.sit];
+  const sit = VIEW(state.sit);
   state.sexes = activeSexes();
+  if (isCycle()) {
+    /* Кривые цикла — женские при любом профиле: пол в профиле решает только,
+       чья рекомендация стоит первой. */
+    state.scByS = { [state.sex]: cycleScenario() };
+    state.sc = state.scByS[state.sex];
+    state.horizon = CYCLE_DAYS;
+    return;
+  }
   state.scByS = {};
   state.sexes.forEach(id => { state.scByS[id] = buildScenario(sit, id, factorsFor(id)); });
   state.sc = state.scByS[state.sex] || state.scByS[state.sexes[0]];
@@ -364,24 +390,40 @@ function toggleSex(id) {
 /* ─── общий рендер ──────────────────────────────────────── */
 
 function renderAll() {
-  const sit = SITUATION_BY_ID[state.sit];
+  const sit = VIEW(state.sit);
+  const cycle = isCycle();
   buildScenarios();
-  state.t = peakMoment(state.sc);
+  state.t = startMoment();
+
+  /* Раздел «Цикл» узнаётся по фону: на html, потому что фон страницы
+     и полупрозрачная шапка берут цвет из токенов на :root. */
+  if (cycle) document.documentElement.dataset.mode = 'cycle';
+  else delete document.documentElement.dataset.mode;
+  syncThemeColor();
 
   renderCats(); renderChips(); renderLegend();
-  $('sitTag').textContent = CATEGORIES.find(c => c.id === sit.cat).title;
+  $('sitTag').textContent = CATS.find(c => c.id === sit.cat).title;
   $('sitName').textContent = sit.name;
-  $('sitBlurb').textContent = sit.blurb;
+  /* После 45 цикл перестаёт быть таким, как на модели, — говорим об этом
+     прямо в описании, а не мелким шрифтом. */
+  const ageNote = cycle ? CYCLE_AGE_NOTE[state.age] : '';
+  $('sitBlurb').textContent = sit.blurb + (ageNote ? ' ' + ageNote : '');
   $('sectChipText').textContent = sit.name;
 
   /* Кривая посчитана на конкретную дозу — показываем её рядом с графиком. */
+  const doseText = cycle ? CYCLE_DOSE : DOSE[sit.id];
   const dose = $('dose');
-  dose.textContent = DOSE[sit.id] || '';
-  dose.hidden = !DOSE[sit.id];
+  dose.textContent = doseText || '';
+  dose.hidden = !doseText;
 
-  renderStats(sit);
+  $('scrub').min = cycle ? 1 : 0;
+  $('scrub').max = cycle ? CYCLE_DAYS : 1000;
+  $('scrub').setAttribute('aria-label', cycle ? 'День цикла' : 'Время после события');
+  document.querySelector('.hfilter').hidden = cycle;
+
+  if (cycle) { renderCycleStats(sit); renderCycleText(sit); }
+  else { renderStats(sit); renderRecovery(sit); }
   renderHormones();
-  renderRecovery(sit);
   drawChart();
   updateTime(state.t);
   syncChip();
@@ -420,7 +462,54 @@ function renderStats(sit) {
     </div>`).join('');
 }
 
+/* Стартовая точка: у события — момент наибольшего отклонения,
+   у цикла — день, выбранный для вида (середина фазы). */
+function startMoment() {
+  return isCycle() ? VIEW(state.sit).t0 : peakMoment(state.sc);
+}
+
+function renderCycleStats(v) {
+  const ph = CYCLE_PHASES.find(p => p.id === v.phase);
+  const cells = [
+    ph
+      ? { label: 'Дни цикла', value: `${ph.from}–${ph.to}`, sub: ph.sci }
+      : { label: 'Длина цикла', value: `${CYCLE_DAYS} дней`, sub: 'модель; в жизни 21–35 — тоже норма' },
+    v.lead,
+    { label: 'Гормонов в разделе', value: String(state.sc.effects.length), sub: 'только те, что меняются по циклу' },
+  ];
+  $('stats').innerHTML = cells.map(c => `
+    <div class="stat">
+      <span class="stat-label">${c.label}</span>
+      <div><span class="stat-value">${c.value}</span><span class="stat-sub">${c.sub}</span></div>
+    </div>`).join('');
+}
+
+/* У цикла две рекомендации — ей и ему — и вместо возврата к норме
+   описание того, как фаза ощущается. Первой стоит карточка того,
+   кто смотрит: пол берётся из профиля. */
+function renderCycleText(v) {
+  const him = state.sex === 'm';
+  $('advice').classList.add('is-pair');
+  $('advice').classList.toggle('is-him-first', him);
+  $('timingTitle').textContent = 'Что делать ей';
+  $('timingText').textContent = v.her;
+  $('timing2').hidden = false;
+  $('timing2Title').textContent = 'Что делать ему';
+  $('timing2Text').innerHTML = v.him.map(([t, x]) => `<b>${t}.</b> ${x}`).join('\n\n');
+  $('recoveryTitle').textContent = v.phase ? 'Как она себя чувствует' : 'Как устроен цикл';
+  $('recoveryText').textContent = v.feel;
+  $('recoveryList').innerHTML = '';
+  $('recoveryList').hidden = true;
+  $('sourceText').textContent = v.source;
+  syncTiming(); syncSource();
+}
+
 function renderRecovery(sit) {
+  $('advice').classList.remove('is-pair', 'is-him-first');
+  $('timingTitle').textContent = 'Рекомендация';
+  $('timing2').hidden = true;
+  $('recoveryTitle').textContent = 'Сколько ждать возврата к норме';
+  $('recoveryList').hidden = false;
   $('sourceText').textContent = SOURCES[sit.id];
   $('recoveryText').textContent = sit.recovery;
   $('timingText').textContent = TIMING[sit.id] || '';
@@ -438,19 +527,28 @@ function renderRecovery(sit) {
   }).join('');
 }
 
+/* Кратность в цикле доходит до десятков раз: «+5900%» не читается,
+   поэтому от двукратного уровня в цикле пишем «×». */
+function fmtLevel(l) {
+  if (!isCycle() || l < 2) return formatDelta(l);
+  return '×' + (l < 10 ? (Math.round(l * 10) / 10).toString().replace('.', ',') : Math.round(l));
+}
+
 /* ─── список гормонов ───────────────────────────────────── */
 
 function effFor(sexId, id) { const sc = state.scByS[sexId]; return sc && sc.byId[id]; }
 function movedAnywhere(id) { return state.sexes.some(s => !!effFor(s, id)); }
 
 function visible(id) {
-  if (state.view === 'active') return movedAnywhere(id);
+  if (state.view === 'active' || isCycle()) return movedAnywhere(id);
   return true;
 }
 
 function renderHormones() {
   const host = $('hormones'); host.innerHTML = '';
   $('cntAll').textContent = HORMONES.length;
+  /* У цикла свой набор гормонов, и он весь задействован: «Все» там не нужно. */
+  const pool = isCycle() ? state.sc.effects.map(e => HORMONE_BY_ID[e.id]) : HORMONES;
   $('segActive').setAttribute('aria-selected', state.view === 'active');
   $('segAll').setAttribute('aria-selected', state.view === 'all');
 
@@ -459,7 +557,7 @@ function renderHormones() {
   }));
 
   GROUPS.forEach(g => {
-    const list = HORMONES.filter(h => h.group === g.id && visible(h.id))
+    const list = pool.filter(h => h.group === g.id && visible(h.id))
       .sort((a, b) => rank(b.id) - rank(a.id));
     if (!list.length) return;
     const wrap = document.createElement('div');
@@ -521,7 +619,7 @@ function paintBar(host, eff, sexId) {
   fill.style.background = sexId
     ? (eff && !flat ? `var(--sex-${sexId})` : 'var(--flat)')
     : (flat ? 'var(--flat)' : (dev > 0 ? 'var(--up)' : 'var(--down)'));
-  val.textContent = eff ? formatDelta(lvl) : 'в норме';
+  val.textContent = eff ? fmtLevel(lvl) : 'в норме';
   val.className = 'hval mono ' + (sexId
     ? (eff && !flat ? 'sex-' + sexId : 'flat')
     : (flat || !eff ? 'flat' : dev > 0 ? 'up' : 'down'));
@@ -571,9 +669,30 @@ function chartGeom() {
   const host = $('chart');
   return { w: host.clientWidth || 600, h: host.clientHeight || 220 };
 }
+/* Ось: у событий логарифмическая, у цикла — ровная по дням. */
+function frac(t) {
+  return isCycle() ? (t - 1) / (CYCLE_DAYS - 1) : toLog(t, state.horizon);
+}
+function unfrac(u) {
+  return isCycle() ? 1 + Math.max(0, Math.min(1, u)) * (CYCLE_DAYS - 1) : invLog(u, state.horizon);
+}
+/* Данные цикла подневные — ползунок и касание встают на целый день. */
+const snap = (t) => (isCycle() ? Math.round(t) : t);
+
 function playheadX() {
   const { w } = chartGeom();
-  return PAD.l + toLog(state.t, state.horizon) * (w - PAD.l - PAD.r);
+  return PAD.l + frac(state.t) * (w - PAD.l - PAD.r);
+}
+
+/* Метки цикла: начало каждой фазы. Подписи короткие — длинные названия
+   фаз на узком графике не помещаются даже в два яруса. */
+function cycleMarks() {
+  const v = VIEW(state.sit);
+  const ph = CYCLE_PHASES.find(p => p.id === v.phase);
+  return {
+    band: ph ? [ph.from - 0.5, ph.to + 0.5] : null,
+    marks: CYCLE_PHASES.map(p => ({ t: p.from, l: p.mark })),
+  };
 }
 
 function drawChart() {
@@ -590,7 +709,7 @@ function drawChart() {
     state.scByS[sx].effects.forEach(e => {
       const pts = [];
       for (let i = 0; i <= 120; i++) {
-        const t = invLog(i / 120, H);
+        const t = unfrac(i / 120);
         const v = Math.log2(levelAt(e, t));
         lo = Math.min(lo, v); hi = Math.max(hi, v);
         pts.push([i / 120, v]);
@@ -604,10 +723,15 @@ function drawChart() {
   const yOf = (v) => PAD.t + (hi - v) / (hi - lo) * ph;
   const path = (pts) => pts.map((p, i) => (i ? 'L' : 'M') + xOf(p[0]).toFixed(1) + ' ' + yOf(p[1]).toFixed(1)).join(' ');
 
-  /* Светлая зона — пока идёт само событие; метки сверху — его этапы. */
-  const ph_ = PHASES[state.sit];
+  /* Светлая зона — пока идёт само событие; метки сверху — его этапы.
+     У цикла зона — выбранная фаза, метки — начала всех пяти фаз. */
+  const cycle = isCycle();
+  const ph_ = cycle ? cycleMarks() : PHASES[state.sit];
   let spanRect = '', marks = '';
-  if (ph_ && ph_.span > 0) {
+  if (cycle && ph_.band) {
+    const [a, b] = ph_.band.map(d => xOf(frac(Math.max(1, Math.min(CYCLE_DAYS, d)))));
+    spanRect = `<rect x="${a.toFixed(1)}" y="${PAD.t}" width="${(b - a).toFixed(1)}" height="${ph}" fill="var(--chart-span)"/>`;
+  } else if (!cycle && ph_ && ph_.span > 0) {
     const x2 = xOf(toLog(Math.min(ph_.span, H), H));
     spanRect = `<rect x="${PAD.l}" y="${PAD.t}" width="${(x2 - PAD.l).toFixed(1)}" height="${ph}" fill="var(--chart-span)"/>`;
   }
@@ -617,7 +741,7 @@ function drawChart() {
     const lastR = [-1e9, -1e9];
     ph_.marks.forEach((mk, i) => {
       if (mk.t > H) return;
-      const x = xOf(toLog(mk.t, H));
+      const x = xOf(frac(mk.t));
       const est = mk.l.length * 4.95;
       const real = textWidth(mk.l, 9, 400);
       /* Сначала вправо от риски, если не влезает — влево; не влезает никуда —
@@ -638,7 +762,7 @@ function drawChart() {
     });
   }
 
-  const gridVals = [4, 3, 2, 1, 0, -1, -2].filter(v => v > lo + 0.05 && v < hi - 0.05);
+  const gridVals = [6, 5, 4, 3, 2, 1, 0, -1, -2].filter(v => v > lo + 0.05 && v < hi - 0.05);
   const grid = gridVals.map(v => {
     const y = yOf(v).toFixed(1);
     const label = v === 0 ? 'норма' : (v > 0 ? '×' + Math.pow(2, v) : '×' + String(Math.pow(2, v)).replace('.', ','));
@@ -646,19 +770,29 @@ function drawChart() {
             <text x="${PAD.l - 7}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="9.5" fill="var(--chart-tick)" font-family="Geist Mono, monospace">${label}</text>`;
   }).join('');
 
-  const cand = TICKS.filter(t => t <= H * 0.95 && t >= H / 5000);
-  const step = Math.max(1, Math.ceil(cand.length / (w < 420 ? 4 : 7)));
-  /* отсчитываем от конца, чтобы правый край шкалы всегда был подписан */
-  const xa = cand.filter((_, i) => (cand.length - 1 - i) % step === 0).map(t => {
-    const x = xOf(toLog(t, H)).toFixed(1);
+  /* У цикла подписаны дни: по неделям, плюс первый и последний. Крайние
+     подписи прижаты к своим краям, чтобы не вылезать за поле. */
+  const ticks = cycle
+    ? [1, 7, 14, 21, CYCLE_DAYS]
+    : (() => {
+      const cand = TICKS.filter(t => t <= H * 0.95 && t >= H / 5000);
+      const step = Math.max(1, Math.ceil(cand.length / (w < 420 ? 4 : 7)));
+      /* отсчитываем от конца, чтобы правый край шкалы всегда был подписан */
+      return cand.filter((_, i) => (cand.length - 1 - i) % step === 0);
+    })();
+  const xa = ticks.map((t, i) => {
+    const x = xOf(frac(t)).toFixed(1);
+    const anchor = !cycle ? 'middle' : i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle';
+    const label = cycle ? String(t) : formatClock(t);
     return `<line x1="${x}" y1="${PAD.t}" x2="${x}" y2="${PAD.t + ph}" stroke="var(--chart-vgrid)" stroke-width="1"/>
-            <text x="${x}" y="${h - 4}" text-anchor="middle" font-size="9.5" fill="var(--chart-tick)" font-family="Geist Mono, monospace">${formatClock(t)}</text>`;
+            <text x="${x}" y="${h - 4}" text-anchor="${anchor}" font-size="9.5" fill="var(--chart-tick)" font-family="Geist Mono, monospace">${label}</text>`;
   }).join('');
 
-  const pxN = xOf(toLog(state.t, H));
+  const pxN = xOf(frac(state.t));
   const px = pxN.toFixed(1);
 
-  const activeId = state.active && movedAnywhere(state.active) ? state.active : state.sc.effects[0].id;
+  const activeId = state.active && movedAnywhere(state.active) ? state.active
+    : (cycle && VIEW(state.sit).hi) || state.sc.effects[0].id;
   const hiCurves = curves.filter(c => c.e.id === activeId);
   const base = curves.filter(c => c.e.id !== activeId).map(c => {
     const stroke = dual ? SEX_COLOR[c.sex] : 'var(--chart-base)';
@@ -733,10 +867,17 @@ function drawChart() {
 /* ─── время ─────────────────────────────────────────────── */
 
 function updateTime(t) {
-  state.t = Math.max(0, Math.min(state.horizon, t));
-  $('timeValue').textContent = state.t < 1 ? 'начало' : formatClock(state.t);
-  $('timeCaption').textContent = state.t < 1 ? 'момент события' : 'после начала';
-  $('scrub').value = Math.round(toLog(state.t, state.horizon) * 1000);
+  if (isCycle()) {
+    state.t = Math.max(1, Math.min(CYCLE_DAYS, Math.round(t)));
+    $('timeValue').textContent = 'день ' + state.t;
+    $('timeCaption').textContent = phaseAt(state.t).mark.toLowerCase();
+    $('scrub').value = state.t;
+  } else {
+    state.t = Math.max(0, Math.min(state.horizon, t));
+    $('timeValue').textContent = state.t < 1 ? 'начало' : formatClock(state.t);
+    $('timeCaption').textContent = state.t < 1 ? 'момент события' : 'после начала';
+    $('scrub').value = Math.round(toLog(state.t, state.horizon) * 1000);
+  }
 
   paintLevels();
   drawChart();
@@ -750,7 +891,7 @@ function chartPointer(ev) {
   const r = host.getBoundingClientRect();
   const pw = r.width - PAD.l - PAD.r;
   const u = Math.max(0, Math.min(1, (ev.clientX - r.left - PAD.l) / pw));
-  updateTime(invLog(u, state.horizon));
+  updateTime(unfrac(u));
   state.tipPinned = true;                 // подсказка закрывается только крестиком
   renderTip(playheadX());
 }
@@ -773,11 +914,14 @@ function renderTip(x, tAt) {
 
   if (!ids.length) { hideTip(); return; }
   tip.hidden = false;
-  $('tipBody').innerHTML = `<b>${t < 1 ? 'момент события' : formatClock(t) + ' спустя'}</b>` +
+  const when = isCycle()
+    ? `день ${Math.round(t)} · ${phaseAt(Math.round(t)).mark.toLowerCase()}`
+    : (t < 1 ? 'момент события' : formatClock(t) + ' спустя');
+  $('tipBody').innerHTML = `<b>${when}</b>` +
     ids.map(r => {
       const vals = state.sexes.map(s => {
         const e = effFor(s, r.id);
-        const v = e ? formatDelta(levelAt(e, t)) : 'норма';
+        const v = e ? fmtLevel(levelAt(e, t)) : 'норма';
         return dual ? `<span class="tip-v tip-v--${s}">${SEX_LABEL[s]} ${v}</span>` : `<span class="tip-v">${v}</span>`;
       }).join('');
       return `<div class="tip-row"><span>${HORMONE_BY_ID[r.id].name}</span><span class="tip-vals">${vals}</span></div>`;
@@ -796,7 +940,9 @@ function showDetail(id, anchor) {
   const h = HORMONE_BY_ID[id];
   state.detailId = id;
   syncPin();
-  const base = baseline(state.sex, state.age, id);
+  /* Базовый фон по возрасту описывает событийные сценарии; у цикла
+     точка отсчёта своя — первые дни цикла, и фон там только путал бы. */
+  const base = isCycle() ? null : baseline(state.sex, state.age, id);
   const sexTitle = SEXES.find(s => s.id === state.sex).title.toLowerCase();
   const ageTitle = AGES.find(a => a.id === state.age).title;
 
@@ -888,13 +1034,13 @@ function bind() {
   wm.onclick = (e) => { e.preventDefault(); wm.classList.add('is-reverted'); toTop(); };
   wm.onmouseleave = () => wm.classList.remove('is-reverted');
 
-  $('scrub').oninput = (e) => updateTime(invLog(e.target.value / 1000, state.horizon));
+  $('scrub').oninput = (e) => updateTime(isCycle() ? +e.target.value : invLog(e.target.value / 1000, state.horizon));
   $('detailClose').onclick = closeDetail;
   $('detailPin').onclick = togglePin;
   $('scrim').onclick = closeDetail;
   $('tipClose').onclick = (e) => { e.stopPropagation(); hideTip(); };
 
-  $('resetBtn').onclick = () => { closeDetail(); updateTime(peakMoment(state.sc)); };
+  $('resetBtn').onclick = () => { closeDetail(); updateTime(startMoment()); };
 
   $('segActive').onclick = () => { state.view = 'active'; renderHormones(); };
   $('segAll').onclick = () => { state.view = 'all'; renderHormones(); };
@@ -904,12 +1050,14 @@ function bind() {
     if (b) toggleSex(b.dataset.sex);
   });
 
-  const tmore = $('timingMore');
-  tmore.onclick = () => {
-    const open = $('timing').classList.toggle('is-open');
-    tmore.setAttribute('aria-expanded', open);
-    tmore.textContent = open ? 'Скрыть' : 'Ещё';
-  };
+  [['timing', 'timingMore'], ['timing2', 'timing2More']].forEach(([card, btn]) => {
+    const b = $(btn);
+    b.onclick = () => {
+      const open = $(card).classList.toggle('is-open');
+      b.setAttribute('aria-expanded', open);
+      b.textContent = open ? 'Скрыть' : 'Ещё';
+    };
+  });
 
   const smore = $('sourceMore');
   smore.onclick = () => {
@@ -959,7 +1107,7 @@ function bind() {
       const r = $('chart').getBoundingClientRect();
       const pw = r.width - PAD.l - PAD.r;
       const uu = Math.max(0, Math.min(1, (e.clientX - r.left - PAD.l) / pw));
-      renderTip(e.clientX - r.left, invLog(uu, state.horizon));
+      renderTip(e.clientX - r.left, snap(unfrac(uu)));
     }
   });
   wrap.addEventListener('pointerup', () => { dragging = false; });
@@ -988,14 +1136,14 @@ function bind() {
   });
   addEventListener('hashchange', () => {
     const id = location.hash.slice(1);
-    if (SITUATION_BY_ID[id] && id !== state.sit) selectSituation(id);
+    if (VIEW(id) && id !== state.sit) selectSituation(id);
   });
 }
 
 /* ─── старт ─────────────────────────────────────────────── */
 
 const hash = location.hash.slice(1);
-if (SITUATION_BY_ID[hash]) { state.sit = hash; state.cat = SITUATION_BY_ID[hash].cat; }
+if (VIEW(hash)) { state.sit = hash; state.cat = VIEW(hash).cat; }
 
 /* Ссылка вида ?p=f-a36 открывает карту сразу под нужный профиль. */
 const fromLink = (new URLSearchParams(location.search).get('p') || '').split('-');

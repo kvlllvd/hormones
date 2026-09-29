@@ -23,7 +23,43 @@ export function resolveEffect(eff, sexId, factors) {
   return { id: eff.h, note: eff.note, peak, tRise, reb, tReb, tEnd, hasReb };
 }
 
+/* Цикл устроен иначе, чем событие: у гормона нет пика и возврата, есть
+   значение на каждый день. Кривая между днями — монотонный кубический
+   сплайн (Фритч — Карлсон): он проходит через каждую точку и не рисует
+   выбросов, которых нет в данных, — обычный сплайн дорисовал бы провал
+   перед пиком ЛГ. Время здесь — день цикла, от 1 до числа дней. */
+export function cycleEffect(h, days, note) {
+  const n = days.length;
+  const d = days.slice(0, n - 1).map((v, i) => days[i + 1] - v);
+  const m = days.map((_, i) => {
+    if (i === 0) return d[0];
+    if (i === n - 1) return d[n - 2];
+    return d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  });
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b;
+    if (s > 9) { const k = 3 / Math.sqrt(s); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
+  }
+  const far = days.reduce((a, b) => (Math.abs(Math.log2(b)) > Math.abs(Math.log2(a)) ? b : a));
+  return { id: h, note, days, slopes: m, peak: far, hasReb: false, tEnd: n };
+}
+
+function cycleLevel(e, t) {
+  const n = e.days.length;
+  const x = clamp(t, 1, n) - 1;
+  const i = Math.min(n - 2, Math.floor(x)), u = x - i;
+  const y0 = e.days[i], y1 = e.days[i + 1], m0 = e.slopes[i], m1 = e.slopes[i + 1];
+  const u2 = u * u, u3 = u2 * u;
+  return (2 * u3 - 3 * u2 + 1) * y0 + (u3 - 2 * u2 + u) * m0 + (-2 * u3 + 3 * u2) * y1 + (u3 - u2) * m1;
+}
+
+export function buildCycle(effects) {
+  return { cycle: true, effects, byId: Object.fromEntries(effects.map(e => [e.id, e])), horizon: effects[0].days.length, slowest: effects[0] };
+}
+
 export function levelAt(e, t) {
+  if (e.days) return cycleLevel(e, t);
   if (t <= 0) return 1;
   if (t < e.tRise) return 1 + (e.peak - 1) * smooth(t / e.tRise);
   if (e.hasReb) {

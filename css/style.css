@@ -105,6 +105,16 @@
   color-scheme:dark;
 }
 
+/* Раздел «Цикл» в светлой теме стоит на слегка розовом фоне. Меняются только
+   фон страницы, полупрозрачные слои поверх него и зона фазы на графике —
+   карточки остаются белыми. В тёмной теме раздел выглядит как все. */
+:root[data-mode="cycle"]:not([data-theme="dark"]){
+  --bg:#FFF9FF;
+  --veil:rgba(255,249,255,.82);
+  --bar-bg:rgba(255,249,255,.94);
+  --chart-span:#FBF0F8;
+}
+
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -480,7 +490,7 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 /* ─── восстановление ────────────────────────────────────── */
 .recovery{background:var(--surface); border-radius:var(--radius); padding:24px 20px; margin-bottom:28px; box-shadow:var(--shadow)}
 .recovery-title{font-size:20px; margin-bottom:10px; letter-spacing:-.03em}
-.recovery-text{font-size:15px; color:var(--ink-2); line-height:1.55; max-width:660px; text-wrap:pretty}
+.recovery-text{font-size:15px; color:var(--ink-2); line-height:1.55; max-width:660px; text-wrap:pretty; white-space:pre-line}
 /* колонка по контейнеру, а не по min-content длинного названия гормона */
 .recovery-list{margin-top:18px; display:grid; grid-template-columns:minmax(0,1fr); gap:1px; background:var(--line-soft); border-radius:12px; overflow:hidden}
 .rrow{display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--surface); padding:10px 13px}
@@ -509,8 +519,14 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
 /* ─── рекомендация ──────────────────────────────────────── */
 /* Плашка сразу под показателями: заголовок, две строки и More.
    Кнопка стоит на второй строке, а не под ней — плашка так на строку ниже. */
+/* Обычно карточка одна. У цикла их две — ей и ему: рядом на широком экране
+   и друг под другом на узком. Первой идёт карточка того, кто смотрит. */
+.advice{display:grid; grid-template-columns:minmax(0,1fr); gap:8px; margin:8px 0 0}
+.advice.is-pair{grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start}
+.advice.is-him-first #timing2{order:-1}
+.timing[hidden],.recovery-list[hidden],.hfilter[hidden]{display:none}
 .timing{
-  position:relative; margin:8px 0 0; padding:16px 18px 15px; border-radius:var(--radius-s);
+  position:relative; margin:0; padding:16px 18px 15px; border-radius:var(--radius-s);
   background:var(--surface); box-shadow:0 1px 2px rgba(16,16,20,.04);
   --timing-fs:14.5px; --timing-pad:18px; --timing-bot:15px;
 }
@@ -522,6 +538,7 @@ h1{font-size:clamp(30px,6.4vw,50px); line-height:1.06; letter-spacing:-.035em; m
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
 .timing.is-open .timing-text{display:block; overflow:visible}
+.timing-text b{font-weight:500; color:var(--ink)}
 .timing-more{
   position:absolute; right:var(--timing-pad); bottom:var(--timing-bot);
   display:inline-flex; align-items:center; height:calc(var(--timing-fs) * 1.55);
@@ -701,7 +718,9 @@ body.is-locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
   .stat-value{font-size:15px}
   .stat-sub{font-size:10px; line-height:1.25; margin-top:3px}
 
-  .timing{margin:6px 0 0; padding:15px 15px 14px; --timing-fs:13.5px; --timing-pad:15px; --timing-bot:14px}
+  .advice{gap:6px; margin-top:6px}
+  .advice.is-pair{grid-template-columns:minmax(0,1fr)}
+  .timing{margin:0; padding:15px 15px 14px; --timing-fs:13.5px; --timing-pad:15px; --timing-bot:14px}
   .timing-title{font-size:15px; margin-bottom:6px}
   .timing-text{line-height:1.5}
   .timing-more{height:calc(var(--timing-fs) * 1.5); font-size:12px}

@@ -7,6 +7,7 @@ import { SITUATIONS, PHASES } from '../js/situations.js';
 import { HORMONE_BY_ID } from '../js/data.js';
 import { SEXES, AGES, profileFactors } from '../js/profile.js';
 import { buildScenario, levelAt } from '../js/engine.js';
+import { cycleScenario, CYCLE_DAYS } from '../js/cycle.js';
 let bad=0, n=0, maxAmp=0, maxWho='';
 for (const s of SITUATIONS) {
   for (const e of s.effects) if(!HORMONE_BY_ID[e.h]){console.log('НЕТ ГОРМОНА',s.id,e.h);bad++}
@@ -31,4 +32,18 @@ for (const s of SITUATIONS) {
   }
 }
 for (const k of Object.keys(PHASES)) if(!SITUATIONS.find(s=>s.id===k)) {console.log('лишние фазы',k);bad++}
+/* Цикл: в каждом узле кривая проходит ровно через данные, а между узлами
+   не выходит за пределы соседних значений — сплайн не должен рисовать пиков
+   и провалов, которых нет в таблице. */
+for (const e of cycleScenario().effects) {
+  for (let d = 1; d <= CYCLE_DAYS; d++) {
+    const v = levelAt(e, d);
+    if (!Number.isFinite(v) || v <= 0 || Math.abs(v - e.days[d - 1]) > 1e-9) { console.log('цикл: узел', e.id, d, v); bad++; }
+  }
+  for (let t = 1; t < CYCLE_DAYS; t += 0.05) {
+    const i = Math.floor(t - 1), a = e.days[i], b = e.days[Math.min(i + 1, CYCLE_DAYS - 1)];
+    const v = levelAt(e, t);
+    if (v < Math.min(a, b) - 1e-6 || v > Math.max(a, b) + 1e-6) { console.log('цикл: выброс сплайна', e.id, t.toFixed(2), v.toFixed(3)); bad++; break; }
+  }
+}
 console.log(`проверено ${n} комбинаций · сценариев ${SITUATIONS.length} · проблем ${bad} · макс. амплитуда ${maxAmp.toFixed(1)}× (${maxWho})`);
